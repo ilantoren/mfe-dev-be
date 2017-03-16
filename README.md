@@ -5,7 +5,7 @@ This README would normally document whatever steps are necessary to get your app
 ### What is this repository for? ###
 
 * Quick summary
-
+	MyFavorEats, java back-end, python back-end and tools, node front end
 * Version
 * [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
