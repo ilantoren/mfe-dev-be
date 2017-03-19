@@ -1,0 +1,34 @@
+logging:
+  path: logs
+
+security:
+  basic:
+    enabled: true
+  user:
+    name: demo
+    password: java
+    
+spring:
+  application:
+    name:  mfe-rest-demo 
+  data:
+    mongodb: 
+      host: ds151719-a0.mlab.com:51719
+      database: mfe-front-end
+      username: mfe-front
+      password: mfe-front
+      
+#     host: ds155718.mlab.com:55718
+#     database: java-demo
+#     username: javademo
+#     password: javademo
+      
+      
+      
+      
+---
+spring:
+  profiles: cloud
+eureka:
+  instance:
+    nonSecurePort: 80

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+python WriteWord2VecToDB.py --vecname word2vec -f data/word2vec.ing.permute.sub.out.txt
+python entityMappingToRDF.py
+python writeManualSubRulesToDB.py
+python Crawl_foodsubs.com.py 
+#python legacyFeedback.py --mongo $1
+python RecipeClassification.py
+python SubstitutionEngine.py  --ids $1
+
+
+

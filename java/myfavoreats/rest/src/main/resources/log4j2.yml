@@ -1,0 +1,32 @@
+Configuration:
+  status: info
+
+  Appenders:
+    Console:
+      name: Console
+      target: SYSTEM_OUT
+      PatternLayout:
+        Pattern: "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
+    File:
+     name: File
+     filename: application.log
+     PatternLayout:
+        Pattern: "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
+          
+  Root:
+    level: info
+    AppenderRef:
+     ref: Console
+     ref: File  
+              
+  Loggers:
+    Logger:
+      name: com.mfe.demo
+      level: debug
+      appender-ref:
+        ref: File
+    
+        
+        
+        
+ 
