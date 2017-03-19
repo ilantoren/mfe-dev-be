@@ -1,0 +1,27 @@
+{
+  "name": "mfe-tech-demo",
+  "description": "nodejs demo jan 2017",
+  "main": "gulpfile.js",
+  "authors": [
+    "Richard Thorne <toren.ilan@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/ryanlanciaux/griddle-gulp-test",
+  "moduleType": [],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    ".jshintrc",
+    "**/*.txt"
+  ],
+  "dependencies": {
+    "jquery": "^2.2.3",
+    "jquery-ui": "^1.11.4",
+    "bootstrap": "^3.3.7",
+    "gulp": "^3.9.1"
+  }
+}

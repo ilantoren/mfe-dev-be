@@ -66,6 +66,7 @@ TSP =     (\Wt|ts|tsp|teaspoon){PLURAL}?{PUNC}
 TBL =     (tb|tbl|tablespoon|tablesp.|tbsp|\WT){PLURAL}?{PUNC}
 LB     =  (lb|pound){PLURAL}?{PUNC}
 INCH =    (in\.|inch){PUNC}
+PACKAGE = (package|pkg|pack){PLURAL}?{PUNC}
 GALLON =  {PUNC}?(gal|gallon){PLURAL}?{PUNC}
 Fr1_4  =  \u00BC
 Fr1_2  =  \u00BD
@@ -5865,6 +5866,7 @@ DISH_S =  "nando's famous flame-grilled peri peri chicken"
 {QUART}               { yybegin( ET ); sb.append( yytext());      yypushback(1);    return getToken( TokenClass.QUART, "quart" ); }
 {GALLON}              { yybegin( ET );  sb.append( yytext());     yypushback(1);    return getToken( TokenClass.GALLON, "gal." );  }
 {SIZE_T}               {                  return getToken( TokenClass.SIZE);       }
+{PACKAGE}             { yybegin( ET );   sb.append(yytext() );  yypushback(1);  return getToken( TokenClass.PACKAGE, "package");  }
 {ABREV}                { yybegin( ET);  yypushback(1);  return getToken( TokenClass.ABREV); }
 {AMNT1}               {yybegin(TK); yypushback(1); return getToken( TokenClass.INTEGER ); }
 {AMNT2}               {yybegin(TK); yypushback(1); return getToken( TokenClass.DECFRAC ); }

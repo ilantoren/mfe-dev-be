@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.mfe.model.ingredient.IngredientPOJO;
-import com.mfe.model.utils.IngredientService;
+import com.mfe.model.ingredient.IngredientService;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

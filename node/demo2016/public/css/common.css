@@ -1,0 +1,147 @@
+
+
+.scroll {
+    border: black ridge;
+    overflow-y: scroll;
+    min-height : 500px;
+    max-height: 700px;
+    width: 100%;
+}
+.unit { 
+ text-align:center;
+}
+th {
+     background: #ccc;
+     text-align: center;
+     padding-left: 12px;
+     padding-right: 12px;
+     }
+ td {
+     border: ridge  1pt
+     padding-left: 12px;
+     padding-right: 12px; 
+ }
+.recipe .nutrition { 
+border: groove ; 
+font-size:14pt;
+ }
+#recipe_title  {
+    font-weight bold;
+    text-align:center;
+    font-size: 200%;
+}
+.amnt { text-align: right; width:10%; font-size:smaller} 
+.food { padding-left: 30px; font-size:smaller}
+.measure {width:20%; text-align:left; font-size: smaller }
+.main {
+    position: initial;
+    margin: auto;
+    width: 90%;
+}
+#main-content {
+    position: relative;
+    float: left;
+    width: 80%
+}
+
+.content-tabs { 
+    border: groove 2pt;
+     max-height: 500px;
+     width:98%
+}
+
+#substitutions-drpdwn {
+	left-margin:10px;
+	padding-bottom:5px;
+	
+}
+#dropdownMenu2 {
+	font-weight: 700;
+	font-size:larger;
+}
+
+#titlex {
+	text-overflow: ellipsis;
+	overflow:hidden;
+	white-space:nowrap;
+	width:90%;
+	padding-bottom:5px;
+	margin-top:5px;
+}
+
+#over write bootrap
+ul {
+	margin-left: -35px;
+}
+	
+.mfe-group-item-selected {
+	border: 5px solid red;
+	opacity: 0.8;
+}
+h1 {
+    margin-left: 10%;
+}
+
+.mfe-group-item {
+      padding: 0 0 0 0;	
+}
+
+h2 {
+    background: #ccc;
+    text-align: center;
+    width: 49%;
+    float: left;
+    position: relative;
+}
+
+.left-menu {
+    width: 20%;
+    position: relative;
+    float: left;
+}
+
+.recipe {
+    width:95%
+
+}
+
+.ingredients {
+	height:400px;
+	overflow-y: scroll;
+}
+
+.ingredient {
+	font-size: smaller;
+}
+.tab-content {
+    overflow-y: scroll;
+    min-height: 500px;
+    max-height:550px;    
+}
+.pane {
+    width: 50%;
+    position: relative;
+    float: left;
+}
+
+.tab-content-svg {
+    visibility: hidden;
+    height: 100%
+}
+
+.tab-content>.tab-content-svg.active { 
+   visibility: initial;
+}
+
+#tabs-child-2  {
+  /* background: url('../image.svg'); */
+}
+
+.added {
+   color: green;
+   background-color: lightgreen;
+}
+
+.decreased {
+   color: red;
+}

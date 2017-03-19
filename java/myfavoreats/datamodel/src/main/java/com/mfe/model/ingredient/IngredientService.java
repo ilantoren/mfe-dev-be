@@ -3,12 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.mfe.model.utils;
+package com.mfe.model.ingredient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mfe.model.ingredient.IngredientPOJO;
 import com.mfe.model.recipe.BadParameterException;
 import com.mfe.model.recipe.NutrientProfile;
 

@@ -1,0 +1,38 @@
+{
+	"name": "mfe-march-demo",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": " gulp; node app.js"
+	},
+	"dependencies": {
+		"express": "4.13.x",
+		"cfenv": "1.0.x",
+		"bluebird": "^3.3.5",
+		"body-parser": "^1.15.0",
+		"bower": "*",
+		"cls-bluebird": "^1.0.1",
+		"continuation-local-storage": "^3.1.7",
+		"cookie-parser": "^1.4.1",
+		"ejs": "^2.3.1",
+		"gulp": "^3.9.1",
+		"gulp-concat": "~2.4.2",
+		"minimatch": "3.0.2", 
+		"js2xmlparser": "^1.0.0",
+		"morgan": "^1.7.0",
+		"nedb": "*",
+		"node-rest-client": "^1.8.0",
+		"path": "*",
+		"request-promise": "^3.0.0",
+		"simple-node-logger": "^0.93.12",
+		"underscore": "~1.8.2",
+		"graceful-fs": "4.1.11"
+	},
+	"repository": {
+		
+	},
+	"engines": {
+		"node": "4.x"
+	}
+}

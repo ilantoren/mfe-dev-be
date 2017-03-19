@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 import com.mfe.model.ingredient.EntityMapping;
 import com.mfe.model.ingredient.IngredientPOJO;
+import com.mfe.model.ingredient.IngredientService;
 import com.mfe.model.utils.IngredientPOJOService;
-import com.mfe.model.utils.IngredientService;
 
 
 @Component

@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.mfe.model.ingredient.IngredientPOJO;
+import com.mfe.model.ingredient.IngredientService;
 import com.mfe.model.recipe.BadParameterException;
 import com.mfe.model.recipe.ChangeType;
 import com.mfe.model.recipe.Line;
