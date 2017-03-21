@@ -22413,3 +22413,24 @@
 2017-03-21 13:03:01.497  INFO 3113 --- [http-nio-8080-exec-5] com.mfe.MfeDemoController                : Start /recipes/with-substitute  (getRecipeWithSubstitute) called with id 58c063e4c782fc0490755739
 2017-03-21 13:03:01.500  INFO 3113 --- [http-nio-8080-exec-5] com.mfe.RecipeWithSubstituteServiceImpl  : Retrieving cached recipes substitution already calculated 58c063e4c782fc0490755739
 2017-03-21 13:03:01.586  INFO 3113 --- [http-nio-8080-exec-5] com.mfe.RecipeWithSubstituteServiceImpl  : using cached recipe subs calculation 58c063e4c782fc0490755739
+2017-03-21 15:53:14.525  INFO 3113 --- [cluster-ClusterId{value='58d0f22c7cd79c0c29bd09fd', description='null'}-localhost:27017] org.mongodb.driver.cluster               : Exception in monitor thread while connecting to server localhost:27017
+
+com.mongodb.MongoSocketOpenException: Exception opening socket
+	at com.mongodb.connection.SocketStream.open(SocketStream.java:63) ~[mongodb-driver-core-3.2.2.jar!/:na]
+	at com.mongodb.connection.InternalStreamConnection.open(InternalStreamConnection.java:114) ~[mongodb-driver-core-3.2.2.jar!/:na]
+	at com.mongodb.connection.DefaultServerMonitor$ServerMonitorRunnable.run(DefaultServerMonitor.java:142) ~[mongodb-driver-core-3.2.2.jar!/:na]
+	at java.lang.Thread.run(Thread.java:745) [na:1.8.0_45]
+Caused by: java.net.ConnectException: Connection refused
+	at java.net.PlainSocketImpl.socketConnect(Native Method) ~[na:1.8.0_45]
+	at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:345) ~[na:1.8.0_45]
+	at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:206) ~[na:1.8.0_45]
+	at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:188) ~[na:1.8.0_45]
+	at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392) ~[na:1.8.0_45]
+	at java.net.Socket.connect(Socket.java:589) ~[na:1.8.0_45]
+	at com.mongodb.connection.SocketStreamHelper.initialize(SocketStreamHelper.java:50) ~[mongodb-driver-core-3.2.2.jar!/:na]
+	at com.mongodb.connection.SocketStream.open(SocketStream.java:58) ~[mongodb-driver-core-3.2.2.jar!/:na]
+	... 3 common frames omitted
+
+2017-03-21 15:53:29.597  INFO 3113 --- [Thread-2] ationConfigEmbeddedWebApplicationContext : Closing org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@41975e01: startup date [Tue Mar 21 11:28:08 IST 2017]; root of context hierarchy
+2017-03-21 15:53:30.376  INFO 3113 --- [Thread-2] o.s.j.e.a.AnnotationMBeanExporter        : Unregistering JMX-exposed beans on shutdown
+2017-03-21 15:53:30.492  INFO 3113 --- [Thread-2] org.mongodb.driver.connection            : Closed connection [connectionId{localValue:2, serverValue:53}] to localhost:27017 because there was a socket exception raised on another connection from this pool.
