@@ -239,7 +239,7 @@ router.get('/recipes/with-substitute/:id', function (req, res, next) {
     res.header("Access-Control-Allow-Methods", "GET, POST");
     res.setHeader('Content-Type', 'text/xml; charset=utf-8')
     console.log("/recipes/with-substitute/:id  " );
-    console.log(  req );
+    //console.log(  req );
    
     var id =     req.params.id
     var target = req.query.target;
@@ -260,12 +260,16 @@ router.get('/recipes/with-substitute/:id', function (req, res, next) {
 	}
     console.log( args );
     console.log( "/recipes/with-substitute/: " + id + " target is " + target);
-    var regexp = new RegExp(/>(\d|\.)+\s?[gm|kcal]+</, 'ig');
+    var regexp = new RegExp(/>(\d|\.)+\s?[gm|kcal]+</g);
     client.methods.recipeWithSubstitute( args, function( data, response ) {
-    		if ( data && typeof myVar === 'string' ) { 
-    			data = data.replace(regexp, ">$1<");
-    			res.send( data );
+    		if ( data) {
+    			console.log( "Request for " + id + " succeeded");
+    			if ( typeof data === 'string' ) { 
+    				data = data.replace(regexp, ">$1<");
+    				res.send( data );
+    			}
     		}
+    		console.log( "Request for " + id + " failed");
     });
 }); 
 

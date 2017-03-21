@@ -1,1 +1,1 @@
-{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"mar19.ingredientPOJO"}]}
+{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"mar19.ingredientPOJO"},{"v":1,"key":{"_fts":"text","_ftsx":1},"name":"ingredientPOJO.fulltext","ns":"mar19.ingredientPOJO","weights":{"canonical":1,"conversions.measure":1,"desc":1,"factors":1},"default_language":"english","language_override":"language","textIndexVersion":3}]}
