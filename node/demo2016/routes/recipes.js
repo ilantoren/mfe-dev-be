@@ -262,9 +262,10 @@ router.get('/recipes/with-substitute/:id', function (req, res, next) {
     console.log( "/recipes/with-substitute/: " + id + " target is " + target);
     var regexp = new RegExp(/>(\d|\.)+\s?[gm|kcal]+</, 'ig');
     client.methods.recipeWithSubstitute( args, function( data, response ) {
-    		if ( data) 
-    			data = data.replace( regexp, ">$1<");
+    		if ( data && typeof myVar === 'string' ) { 
+    			data = data.replace(regexp, ">$1<");
     			res.send( data );
+    		}
     });
 }); 
 
