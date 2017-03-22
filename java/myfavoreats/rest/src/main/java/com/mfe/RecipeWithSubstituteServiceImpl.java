@@ -47,7 +47,7 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 
 	private RecipeChangeService recipeChangeService;
 
-	private Logger log = Logger.getLogger(getClass());
+	private Logger log = Logger.getLogger(RecipeWithSubstituteServiceImpl.class);
 
 	public RecipeWithSubstituteServiceImpl() {
 		this.recipeChangeService = new RecipeChangeService();
