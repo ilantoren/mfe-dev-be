@@ -53,6 +53,9 @@ public interface RecipeRepository extends MongoRepository<RecipePOJO, String> {
 	
 	@Query( value="{$text: {$search: ?0}}", fields = "{ title:1, site:1, urn:1}")
 	Stream<RecipePOJO> findBySearchPhrase( String phrase );
+
+	@Query( value="{title:{$regex: ?0}}", fields = "{ title:1, site:1, urn:1}")
+	Stream<RecipePOJO> findTitleStartsWith( String expr );
 	
 	@Query( value = "{ \"steps.lines.subs.description\": {$exists:1}}", fields="{ \"steps.lines.subs.description\":1} ")
 	List<RecipePOJO> findRecipeSubstitutions();
