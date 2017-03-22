@@ -3,7 +3,8 @@ var concat = require('gulp-concat');
 
 
 gulp.task('default',  ['copy'])
-gulp.task('copy',  ['default'])
+gulp.task('copy'  )
+
 
 gulp.task('watch', function(){
 	gulp.watch('scripts/**/*.*', ['default']);
@@ -13,16 +14,11 @@ var paths = {
     bower: "./bower_components/",
     lib: "./public/"
 };
-
+gulp.copy=function(src,dest){
+    return gulp.src(src, {base:"."})
+        .pipe(gulp.dest(dest));
+};
 gulp.task("copy", [], function () {
-    var bower = {
-        "swig":   "swig/lib/**/*.{js,map}"
-    }
- 
-    for (var destinationDir in bower) {
-        console.log( bower[destinationDir])
-        gulp.src(paths.bower + bower[destinationDir])
-          .pipe(gulp.dest(paths.lib + destinationDir  ));
-    }
+   gulp.src('./bower_components/**/**/*.{js,map,css}' ).pipe( gulp.dest( './public/components'));
 });
 console.log("built");
