@@ -1,4 +1,9 @@
 
+logging:
+  file: mfe-rest.log
+  path: logs
+  
+  
 security:
   basic:
     enabled: true
@@ -11,10 +16,13 @@ spring:
     name:  mfe-rest-demo 
   data:
     mongodb:
-      host: ds151719-a0.mlab.com:51719
-      database: mfe-front-end
-      username: mfe-front
-      password: mfe-front
+      host: localhost:27017
+      database: mar19
+      
+#      host: ds151719-a0.mlab.com:51719
+#      database: mfe-front-end
+#      username: mfe-front
+#      password: mfe-front
       
       
       

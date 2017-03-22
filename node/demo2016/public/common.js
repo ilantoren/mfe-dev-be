@@ -113,24 +113,27 @@ function processUrl( url, selector) {
         var proc2 = Saxon.newXSLT20Processor(xsl2);
         Saxon.setLogLevel('INFO');
         proc2.setParameter(null, 'title', selector)
-        var doc = proc2.transformToDocument( xmlfile );
-        var d1 = Saxon.serializeXML(doc.firstElementChild.children[0]);
+        proc2.setSuccess( performAfterSuccess);
+        proc2.transformToDocument( xmlfile );
+        
+        
+}
+
+
+function performAfterSuccess( proc ) {
+	 console.log( 'performAfterSuccess' );
+	 var doc = proc.getResultDocument();
+	 var d1 = Saxon.serializeXML(doc.firstElementChild.children[0]);
         var d2 = Saxon.serializeXML( doc.firstElementChild.children[1]);
         var d3 = Saxon.serializeXML( doc.firstElementChild.children[2] );
         var d4 = Saxon.serializeXML( doc.firstElementChild.children[3]);
-        //var childtitle = doc.firstChild.childNodes[1].firstChild.firstChild.firstChild;
-        //var ctitle = '<div><h3>' + Saxon.serializeXML( childtitle) + '</h3></div>';
-        //var ctitle = '';
-       
-        //var ptitle = '<div><h3>' + Saxon.serializeXML( title ) + '</h3></div>';
-      
-       
+
         $("#tabs-child-2").html( d1 );
         $("#tabs-child-1").html( d2 );
         $("#tabs-orig-2").html( d3 );
         $("#tabs-orig-1").html( d4 );
-        
 }
+
 
 function updateDropdown(child, parentId, id) {
 	    var menuUrl;
@@ -154,7 +157,25 @@ function updateDropdown(child, parentId, id) {
  }
 
 function buildMenu() {
-    var titles = [];
+    var titles = [
+    	{ "id" : "58c063e4c782fc0490755747", "title" : "Spaghetti with sauce", "urn" : "https://plus.strauss-group.co.il/recipe/245", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/mini_spaghetti.jpg", "site" : "Strauss" }
+    	,{ "id" : "58c063e4c782fc049075573e", "title" : "leek patties", "urn" : "https://plus.strauss-group.co.il/recipe/33", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/leek_cutlets.jpg", "site" : "Strauss" }
+    	,{ "id" : "58c063e4c782fc0490755744", "title" : "mediterranean feta and vegetable quiche", "urn" : "https://plus.strauss-group.co.il/recipe/191", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/roasted_vegetables_fetta_quiche.jpg", "site" : "Strauss" }
+    	,{ "id" : "58c063e4c782fc0490755741", "title" : "Mediteranean bulgur salad garnished with tahina and doritos", "urn" : "https://plus.strauss-group.co.il/recipe/7", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/wheat_groats_tahini_salad.jpg", "site" : "Strauss" }
+    	,{ "id" : "58c063e4c782fc049075573a", "title" : "baby kale and leek quiche", "urn" : "https://plus.strauss-group.co.il/recipe/19", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/baby_kale_leek_quiche.jpg", "site" : "Strauss" }
+    	,{ "id" : "58c063e4c782fc0490755739", "title" : "Cubed chicken breast on honeyed kadaif", "urn" : "https://plus.strauss-group.co.il/recipe/16", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/honey_glazed_chicken_breast_on_kadaif.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc049075573c", "title" : "chicken and quinoa patties", "urn" : "https://plus.strauss-group.co.il/recipe/24", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/chicken_quinoa_cutlets.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc0490755748", "title" : "zucchini cutlets", "urn" : "https://plus.strauss-group.co.il/recipe/342", "imageUrl" : "https://cc.strauss-group.com/Uploads//Recipes/Zucchini-_potato_pancake2.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc0490755749", "title" : "Stuffed shells", "urn" : "https://plus.strauss-group.co.il/recipe/372", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/cheese_filled_pasta.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc049075573b", "title" : "vegetable muffin", "urn" : "https://plus.strauss-group.co.il/recipe/22", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/vegetables_muffins.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc049075573d", "title" : "sweet potato cigars", "urn" : "https://plus.strauss-group.co.il/recipe/29", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/sweet_potato_cigar_pastry.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc049075573f", "title" : "eggplant casserole", "urn" : "https://plus.strauss-group.co.il/recipe/50", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/eggplants_yogurt_pie.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc0490755740", "title" : "vegetable pancake", "urn" : "https://plus.strauss-group.co.il/recipe/66", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/vegetables_pancake.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc0490755742", "title" : "mango bulgur salad", "urn" : "https://plus.strauss-group.co.il/recipe/81", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/mango_and_wheat_groats_salad.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc0490755743", "title" : "liver filled phyllo", "urn" : "https://plus.strauss-group.co.il/recipe/90", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/liver_stuffed_filo.jpg", "site" : "Strauss" }	
+		,{ "id" : "58c063e4c782fc0490755745", "title" : "spinach lasagna", "urn" : "https://plus.strauss-group.co.il/recipe/194", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/spinace_ricotta_lasagna.jpg", "site" : "Strauss" }
+		,{ "id" : "58c063e4c782fc0490755746", "title" : "kale quiche", "urn" : "https://plus.strauss-group.co.il/recipe/230", "imageUrl" : "https://cc.strauss-group.com/Uploads/Recipes/kale_cheese_quiche.jpg", "site" : "Strauss" }
+	];
     $.ajax({
   url: "/api/recipes/changed/title",
   context: document.body,

@@ -57,13 +57,18 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo, String targetId) {
 		recipeChangeService.setIngredientPOJOService(ingredientPOJOService);
 		List<RecipePOJO> cached;
-		/*
-		 * if ( targetId.equals("NONE")) { cached =
-		 * getCachedRecipeSubsCalculationByRecipe( pojo ); }else { cached =
-		 * getCachedRecipeSubsCalculation( pojo, targetId ); }
-		 * 
-		 * if( cached.size() > 1 ) { return cached; }
-		 */
+		log.info( "Retrieving cached recipes substitution already calculated " + pojo.getId() );
+		  if ( targetId.equals("NONE")) { 
+			  cached =getCachedRecipeSubsCalculationByRecipe( pojo );
+			  }else { 
+	            cached = getCachedRecipeSubsCalculation( pojo, targetId );
+		    }
+		  
+		  if( cached.size() > 1 ) {
+			  log.info( "using cached recipe subs calculation " + pojo.getId() );
+			  return cached;
+		   }
+		 
 		String recipeId = pojo.getId();
 		Substitutions substitutions = substitutionsRepository.findByRecipeId(recipeId);
 		if (substitutions == null) {
