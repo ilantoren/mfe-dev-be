@@ -59,12 +59,14 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		List<RecipePOJO> cached;
 		log.info( "Retrieving cached recipes substitution already calculated " + pojo.getId() );
 		  if ( targetId.equals("NONE")) { 
+			  log.info( "no target specified: using first substitution ");
 			  cached =getCachedRecipeSubsCalculationByRecipe( pojo );
 			  }else { 
+				  log.info( "Substitution specified " + targetId );
 	            cached = getCachedRecipeSubsCalculation( pojo, targetId );
 		    }
 		  
-		  if( cached.size() > 1 ) {
+		  if(cached != null &&  cached.size() > 1 ) {
 			  log.info( "using cached recipe subs calculation " + pojo.getId() );
 			  return cached;
 		   }
@@ -121,23 +123,26 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	}
 
 	private List<RecipePOJO> getCachedRecipeSubsCalculationByRecipe(RecipePOJO pojo) {
-		ArrayList<RecipePOJO> results = new ArrayList<>();
+		log.warn("getCachedRecipeSubsCalculationByRecipe off");
+		/*ArrayList<RecipePOJO> results = new ArrayList<>();
 		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository.findByRecipeid(pojo.getId())
 				.stream().findAny();
 		calculation.ifPresent(recipeSubsCalculation -> {
 			results.addAll(useRecipeSubsCalculation(pojo, recipeSubsCalculation));
-		});
-		return results;
+		});*/
+		return null;
 	}
 
 	private List<RecipePOJO> getCachedRecipeSubsCalculation(RecipePOJO pojo, String targetId) {
-		ArrayList<RecipePOJO> results = new ArrayList<>();
+		log.warn( "getCachedRecipeSubsCalculation off");
+		
+		/*ArrayList<RecipePOJO> results = new ArrayList<>();
 		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository
 				.findByRecipeIdAndTargetId(pojo.getId(), targetId).stream().findFirst();
 		calculation.ifPresent(recipeSubsCalculation -> {
 			results.addAll(useRecipeSubsCalculation(pojo, recipeSubsCalculation));
-		});
-		return results;
+		});*/
+		return null;
 	}
 
 	/**
