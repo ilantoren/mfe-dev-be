@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.mfe.model.ingredient.IngredientPOJO;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JacksonXmlRootElement(localName = "options")
@@ -22,6 +23,8 @@ public class RecipeSubsOption {
 	
 	@JsonProperty( defaultValue = "1.0")
 	Double probability;
+
+	IngredientPOJO ingredient;
 	
 	public  RecipeSubsOption( String target ) {
 		this.target = target;
@@ -63,7 +66,13 @@ public class RecipeSubsOption {
 
 	public void setUid(String uid) {
 		this.uid = uid;
-	} 
-	
-	
+	}
+
+	public IngredientPOJO getIngredient() {
+		return ingredient;
+	}
+
+	public void setIngredient(IngredientPOJO ingredient) {
+		this.ingredient = ingredient;
+	}
 }

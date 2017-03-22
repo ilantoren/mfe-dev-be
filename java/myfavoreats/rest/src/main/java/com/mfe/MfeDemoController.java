@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.mfe.frontend.IngredientSorters;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +82,9 @@ public class MfeDemoController {
 	
 	@Autowired
 	FileBasedIngredientPOJOService ingredientPojoService;
+
+	@Autowired
+	IngredientPOJOServiceImpl ingredientPojo;
 	
 	RecipeChangeService recipeChangeService;
 	
@@ -253,13 +257,27 @@ public class MfeDemoController {
 	List<RecipeTitle>  getRecipeTitlesBySearchPhase( @PathVariable("phrase") String phrase ) {
 		
 		Date start = new Date();
-		Set<String> recipeIdSet = recipes.findBySearchPhrase(phrase).map(a -> a.getId()).collect( Collectors.toSet() );
+		Set<String> recipeIdSet = recipes.findBySearchPhrase("*"+phrase).map(a -> a.getId()).collect( Collectors.toSet() );
 		List<RecipeTitle> result = imageRepository.findAllTitles().filter( a -> recipeIdSet.contains(a.getRecipeId()) )
 		.map(a -> new RecipeTitle( a.getRecipeId(), a.getTitle(), a.getUrl(), a.getSite(), a.getImageUrl() ) ).collect( Collectors.toList());
 		Date queryEnd = new Date();
 		long milis = queryEnd.getTime() - start.getTime();
 		log.info("/recipes/title/search/{phrase} Phrase: " + phrase  + " duration "  + milis);
 		
+		return result;
+	}
+
+	@RequestMapping( method=RequestMethod.GET, value="/recipes/title/autocomplete/{phrase}")
+	List<RecipeTitle>  getRecipeTitlesAutoComplete( @PathVariable("phrase") String chars ) {
+
+		Date start = new Date();
+		Set<String> recipeIdSet = recipes.findTitleStartsWith(chars).map(a -> a.getId()).collect( Collectors.toSet() );
+		List<RecipeTitle> result = imageRepository.findAllTitles().filter( a -> recipeIdSet.contains(a.getRecipeId()) )
+		.map(a -> new RecipeTitle( a.getRecipeId(), a.getTitle(), a.getUrl(), a.getSite(), a.getImageUrl() ) ).collect( Collectors.toList());
+		Date queryEnd = new Date();
+		long milis = queryEnd.getTime() - start.getTime();
+		log.info("/recipes/title/search/{phrase} Phrase: " + chars  + " duration "  + milis);
+
 		return result;
 	}
 	
@@ -299,6 +317,36 @@ public class MfeDemoController {
 		log.info( "End " + Long.toString(elapsed) + "ms:   /recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id );
 		return null;
 	}
+
+	@RequestMapping( method=RequestMethod.GET, value = "/recipes/full-substitute/{id}")
+	@ResponseBody
+	RecipePOJO getRecipeFullSubstitute( @PathVariable("id") String id, @RequestParam(value="sort", defaultValue="NONE") String sort ){
+
+		RecipePOJO parentRecipe = recipes.findRecipeById(id);
+
+		List<RecipePOJO> myrecipes = recipeSubstitutionService.getRecipeAndSubstitute(parentRecipe, null);
+		if ( myrecipes.isEmpty() ) {
+			log.warn( "No results were obtained from the recipeSubstitutionService " + id );
+		}
+		else{
+			RecipePOJO subs = myrecipes.get(0);
+			subs.getSubs().forEach(sub -> {
+				sub.getOptions().forEach( option -> {
+					option.setIngredient(ingredientPojo.getByEntityMapping((option.getTargetId())));
+				});
+
+				if ("carbs".equals(sort)){
+					sub.getOptions().sort(new IngredientSorters.LowCarbsCompare());
+				}
+
+			});
+
+			return subs;
+		}
+
+		return null;
+	}
+
 	
 	@RequestMapping( method=RequestMethod.GET,  value = "/recipes/changed/pair/{id}")
 	@ResponseBody
