@@ -25,4 +25,23 @@
 	<dependencies>
 	
 	</dependencies>
+	
+	<pluginRepositories>
+	  <pluginRepository>
+    <id>synergian-repo</id>
+    <url>https://raw.github.com/synergian/wagon-git/releases</url>
+  </pluginRepository>
+	</pluginRepositories>
+	<!--  myfavoreats/myfavoreats-2017  -->
+	<distributionManagement>
+  <repository>
+    <id>myfavoreats-master</id>
+    <name>myfavoreats-bitbucket</name>
+        <url>git:releases://git@bitbucket.org:myfavoreats/myfavoreats-2017.git/master</url>
+  </repository>
+</distributionManagement>
+<build>
+<extensions>
+</extensions>
+</build>
 </project>
