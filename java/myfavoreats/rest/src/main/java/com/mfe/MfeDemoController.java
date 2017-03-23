@@ -280,16 +280,16 @@ public class MfeDemoController {
 
 		return result;
 	}
-	
+	/* to keep compatibility with the FE the old deprecated requestParam still exists but isn't used */
 	@RequestMapping( method=RequestMethod.GET, value = "/recipes/with-substitute/{id}")
 	@ResponseBody
-	String getRecipeWithSubstitute( @PathVariable("id") String id, @RequestParam(value="target", defaultValue="NONE") String targetId ){
+	String getRecipeWithSubstitute( @PathVariable("id") String id, @RequestParam(value="target",required=false,  defaultValue="NONE") String targetId, @RequestParam( value="optionUid", required=false) String optionId ){
 		Date startTime = new Date();
-		if ( targetId == null ) targetId = "NONE";
-		if ( targetId.equals("NONE")) {
-			log.info( "Start /recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id );
+		if ( optionId == null ) optionId = "NONE";
+		if ( optionId.equals("NONE")) {
+			log.info( "Start timer:  /recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id );
 		}else {
-			log.info( "/recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id + " and targetId " + targetId );
+			log.info( "/recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id + " and recipeSubOption id of " + optionId );
 		}
 		
 		RecipePOJO parentRecipe = recipes.findRecipeById(id);
@@ -297,7 +297,7 @@ public class MfeDemoController {
 			log.warn("recipePOJO was not found for id " + id );
 		}
 		else {
-			 List<RecipePOJO> myrecipes = recipeSubstitutionService.getRecipeAndSubstitute(parentRecipe, targetId);
+			 List<RecipePOJO> myrecipes = recipeSubstitutionService.getRecipeAndSubstitute(parentRecipe, optionId);
 			if ( myrecipes.isEmpty() ) {
 				log.warn( "No results were obtained from the recipeSubstitutionService " + id );
 			}
@@ -314,7 +314,7 @@ public class MfeDemoController {
 		log.warn( "Empty result set returned for recipePojo " + id );
 		Date stopTime = new Date();
 		long elapsed =  stopTime.getTime() - startTime.getTime();
-		log.info( "End " + Long.toString(elapsed) + "ms:   /recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id );
+		log.info( "End timer took " + Long.toString(elapsed) + "ms:   /recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id );
 		return null;
 	}
 

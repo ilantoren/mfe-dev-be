@@ -25,15 +25,17 @@ public class IngredientSubstitution implements Serializable {
 	private  String substituteFor;
     private  String probability;
     private  String id;
+    private String optionId;
     private String targetId;
     private String description;
     private String choChange;
     private String kcalChange;
 
-    public IngredientSubstitution(String subFor, String targetId, String prob) {
+    public IngredientSubstitution(String subFor, String targetId, String optionId, String prob) {
         this.substituteFor = subFor;
         this.probability = prob;
         this.targetId = targetId;
+        this.optionId = optionId;
     }
 
     public String getSubstituteFor() {
@@ -71,7 +73,15 @@ public class IngredientSubstitution implements Serializable {
     
     
     
-    public String getDescription() {
+    public String getOptionId() {
+		return optionId;
+	}
+
+	public void setOptionId(String optionId) {
+		this.optionId = optionId;
+	}
+
+	public String getDescription() {
 		return description;
 	}
 

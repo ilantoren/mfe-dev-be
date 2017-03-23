@@ -8,7 +8,7 @@ import com.mfe.model.recipe.RecipeSubsOption;
 
 public interface RecipeWithSubstituteService {
 	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo);
-	public List<RecipePOJO> getRecipeAndSubstitute( RecipePOJO pojo, String target);
+	public List<RecipePOJO> getRecipeAndSubstitute( RecipePOJO pojo, String optionId);
 	public List<RecipePOJO> getRecipeAndSubstitute( RecipePOJO pojo, String substitutionId, RecipeSubsOption option);
 	public List<RecipeSubsCalculation> getAllRecipeCalculations( RecipePOJO pojo );
 }

@@ -8,6 +8,7 @@ package com.mfe.model.utils;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -331,8 +332,9 @@ public class RecipeChangeService {
     	 }
      }
      public void calculateRecipeNutrition(RecipePOJO pojo, IngredientPOJOService ingredientPojo) throws BadParameterException {
-         NutrientProfile nutrients = new NutrientProfile();
-         log.info( "calculating");
+         Date start = new Date();
+    	 NutrientProfile nutrients = new NutrientProfile();
+         log.info( "calculating for " + pojo.getId() + ": Start timer");
 
          List<Line> ingredients = (List<Line>) RecipePOJO.getIngredientLines(pojo);
          for (Line ingredient : ingredients) {
@@ -367,6 +369,8 @@ public class RecipeChangeService {
              pojo.setNutrients(nutrients);
              pojo.setGramsPerPortion(BigDecimal.valueOf(100));
          }
+         Long elapsed = new Date().getTime() - start.getTime();
+         log.info( "Stop timer: elapsed " +  elapsed  + " ms");
      }
      
      public Map<String,Set<RecipeSubsCalculation>> getAllRecipeSubstitutes( RecipePOJO pojo ) {

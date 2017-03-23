@@ -54,17 +54,17 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	}
 
 	@Override
-	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo, String targetId) {
+	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo, String optionId) {
 		recipeChangeService.setIngredientPOJOService(ingredientPOJOService);
 		List<RecipePOJO> cached;
 		String id = pojo == null ? null : pojo.getId();
 		log.info( "Retrieving cached recipes substitution already calculated " + id );
-		  if ( targetId.equals("NONE")) { 
+		  if ( optionId.equals("NONE")) { 
 			  log.info( "no target specified: using first substitution ");
 			  cached =getCachedRecipeSubsCalculationByRecipe( pojo );
 			  }else { 
-				  log.info( "Substitution specified " + targetId );
-	            cached = getCachedRecipeSubsCalculation( pojo, targetId );
+				  log.info( "Substitution specified " + optionId );
+	            cached = getCachedRecipeSubsCalculation( pojo, optionId );
 		    }
 		  
 		  if(cached != null &&  cached.size() > 1 ) {
@@ -85,11 +85,15 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		pojo.setSubs(substitutions.getSubs());
 		fillInSubsPerLine(pojo);
 		List<RecipePOJO> pojoList = new ArrayList<>();
-		Optional<RecipeSub> recipeSub = pojo.getSubs().stream().filter(a -> subHasTargetId(a, targetId)).findFirst();
+		
+		/*
+		 * @Todo THIS SECTION IS UNNECESSARILY COMPLEX
+		 */
+		Optional<RecipeSub> recipeSub = pojo.getSubs().stream().filter(a -> subHasOptionId(a, optionId)).findFirst();
 		recipeSub.ifPresent(x -> {
 			String substitutionId = x.getUid();
 			Optional<RecipeSubsOption> recipeSubsOpt = x.getOptions().stream()
-					.filter(option -> option.getTargetId().equals(targetId)).findFirst();
+					.filter(option -> option.getUid().equals(optionId)).findFirst();
 			recipeSubsOpt.ifPresent(myoption -> {
 				List<RecipePOJO> y = getRecipeAndSubstitute(pojo, substitutionId, myoption);
 				pojoList.addAll(y);
@@ -123,26 +127,33 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		return optFound.isPresent();
 	}
 
+	private boolean subHasOptionId(RecipeSub recipeSub, String optionId) {
+		Optional<RecipeSubsOption> optFound = recipeSub.getOptions().stream()
+				.filter(opt -> opt.getUid().equals(optionId)).findFirst();
+		return optFound.isPresent();
+	}
 	private List<RecipePOJO> getCachedRecipeSubsCalculationByRecipe(RecipePOJO pojo) {
 		log.warn("getCachedRecipeSubsCalculationByRecipe off");
-		/*ArrayList<RecipePOJO> results = new ArrayList<>();
+		ArrayList<RecipePOJO> results = new ArrayList<>();
 		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository.findByRecipeid(pojo.getId())
 				.stream().findAny();
 		calculation.ifPresent(recipeSubsCalculation -> {
 			results.addAll(useRecipeSubsCalculation(pojo, recipeSubsCalculation));
-		});*/
-		return null;
+		});
+		return results;
 	}
 
-	private List<RecipePOJO> getCachedRecipeSubsCalculation(RecipePOJO pojo, String targetId) {
-		log.warn( "getCachedRecipeSubsCalculation off");
+	private List<RecipePOJO> getCachedRecipeSubsCalculation(RecipePOJO pojo, String optionId) {
+//		log.warn( "getCachedRecipeSubsCalculation off");
+//		
+//		ArrayList<RecipePOJO> results = new ArrayList<>();
+//		RecipeSubsCalculation calculation = recipeSubsCalculationRepository
+//				.findByOptionUid( optionId);
+//		if (  calculation != null ){
+//			results.addAll(useRecipeSubsCalculation(pojo, calculation));
+//			return results;
+//		}
 		
-		/*ArrayList<RecipePOJO> results = new ArrayList<>();
-		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository
-				.findByRecipeIdAndTargetId(pojo.getId(), targetId).stream().findFirst();
-		calculation.ifPresent(recipeSubsCalculation -> {
-			results.addAll(useRecipeSubsCalculation(pojo, recipeSubsCalculation));
-		});*/
 		return null;
 	}
 
@@ -222,7 +233,7 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 						continue;
 					}
 					IngredientSubstitution sub = new IngredientSubstitution(subCalculation.getTarget(),
-							subCalculation.getTargetId(), subCalculation.getProbability().toString());
+							subCalculation.getTargetId(), subCalculation.getOption().getUid(), subCalculation.getProbability().toString());
 					sub.setDescription(subCalculation.getDescription());
 					if ( subCalculation.getRecipeChange() == null || subCalculation.getRecipeChange().getCarbohydrate() == null ) {
 						log.warn( "carbohydrates are not set in " + subCalculation.getDescription() );

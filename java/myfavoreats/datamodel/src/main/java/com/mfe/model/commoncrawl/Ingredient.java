@@ -125,11 +125,15 @@ public class Ingredient implements Serializable {
         this.subs = subs;
     }
     
-    public void addSubstitution( String key, String targetId,  String value) {
+    public void addSubstitution( String key, String targetId,String optionId,  String value) {
         if ( value == null ) value = "0";
-        IngredientSubstitution x = new IngredientSubstitution( key,targetId, value);
+        IngredientSubstitution x = new IngredientSubstitution( key,targetId,optionId, value);
         this.subs.add(x);
     }
-  
-
+    
+    public void addSubstitution( String key, String targetId,  String value) {
+    	 String s = String.format( "%s,%s", key,targetId);
+    	 Integer hc = s.hashCode();
+    	addSubstitution(  key,  targetId, hc.toString(),   value);
+    }
 }
