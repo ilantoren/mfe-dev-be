@@ -28,14 +28,15 @@ class Recipe:
         if not 'cannonical' in l: l['cannonical'] = None
         if not 'gram' in l: l['gram'] = None
         if not 'quantity' in l: 
-          l['quantity'] = None  
+          l['quantity'] = None 
+        if not 'uid' in l: l['uid'] = '' 
         if not 'original' in l: l['original'] = ''      
         self.ings.append(l)
 
   def isValid(self):
     for s in self.dic['steps']:
       if type(s) is not dict: return False
-      if not '_class' in self.dic or self.dic['_class'] != "com.mfe.model.RecipePOJO": 
+      if not '_class' in self.dic or self.dic['_class'] not in ["com.mfe.model.RecipePOJO","recipe.RecipePOJO", "com.mfe.model.recipe.RecipePOJO"]:
         return False
     return True
 

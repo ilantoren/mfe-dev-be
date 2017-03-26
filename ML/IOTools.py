@@ -17,15 +17,8 @@ from RDF import RDF, RDFGraph
 from Recipe import Recipe
 import json
 
-LOCAL_MONGO = "mongodb://127.0.0.1:27017/"
-REMOTE_MONGO = "mongodb://nailon:andersen7@ds145728-a0.mlab.com:45728/"
-GLUTENDEMO_REMOTE_MONGO = "mongodb://javademo:javademo@ds155718.mlab.com:55718/"
-GLUTENDEMO_LOCAL_MONGO = "mongodb://127.0.0.1:27017/"
-
-DEFAULT_DB = "myfavoreats-develop"
-
-LOCAL_MONGODB = "mongodb://127.0.0.1:27017/myfavoreats-develop"
-DEFAULT_MONGODB = "mongodb://nailon:andersen7@ds145728-a1.mlab.com:45728/myfavoreats-develop"
+# maximum size of chunk of table (for stats collection)
+MAX_STATS_TABLE_DOC_SIZE = 10000
 
 DEFAULT_INSTRUCTION_ANNOTATION_COLLECTION_NAME = 'instructionAnnotation'
 DEFAULT_ENTITY_MAPPING_COLLECTION_NAME = 'entityMapping'
@@ -88,6 +81,12 @@ def strip_newlines(x):
   return x
 
 
+def tuple_or_identity(x):
+  try:
+    return tuple(x)
+  except:
+    return x
+
 def getTags(r):
   ret = {}
   if not 'tags' in r:
@@ -115,12 +114,16 @@ class RecipeDB:
                stats_collection_name = DEFAULT_STATS_COLLECTION_NAME,
                rdf_collection_name = DEFAULT_RDF_COLLECTION_NAME,
                bulk_batch=100, sub_bulk_batch=100,
-               option_parser = None):  
+               option_parser = None,
+               config_file = None):  
 
-    option_parser.add_option("--config", "--config", dest="config", help="Configure location of mongo", default="local.config")
-    (options, args) = option_parser.parse_args()
-
-    config_json = json.loads(open(options.config).read())
+    if option_parser is not None:
+      assert config_file is None
+      option_parser.add_option("--config", "--config", dest="config", help="Configure location of mongo", default="local.config")
+      (options, args) = option_parser.parse_args()
+      config_file = options.config
+      
+    config_json = json.loads(open(config_file).read())
 
     DB = config_json["db"]
     mongoURL = config_json["host"] + "/" + config_json["db"]
@@ -183,6 +186,17 @@ class RecipeDB:
       if ing['source'] in ['USDA SR28', 'SR27']:
         self.ingredients_dic[int(ing['uid'])] = ing
 
+  def getEntityUSDAFamily(self, cann):
+    if not cann in self.entitymap_dic: return None
+    ent = self.entitymap_dic[cann]
+    if not 'ndb_no' in ent: return None
+    ent_uid = int(ent['ndb_no'])
+    if not ent_uid in self.ingredients_dic: return None
+    return self.ingredients_dic[ent_uid]['foodGroup']
+
+  def getEntityIdByCannonical(self, cannonical):
+    return self.entitymap_dic[cannonical]['_id']
+
   def __del__(self): 
     logging.info('Deleting RecipeDB object')
   def get_feedback_coll(self): return self.feedback_coll
@@ -210,9 +224,10 @@ class RecipeDB:
 
   def cannonicalize_entities(self, recipe):
     for ing in recipe.ings:
-      if ing['cannonical'] is None or ing['cannonical'] == '':
-        cannonicalized = self.cannonicalize_entity(ing['food'])
-        ing['cannonical'] = cannonicalized
+      if ing['cannonical'] is None: 
+        ing['cannonical'] = self.cannonicalize_entity(ing['food'])
+        continue
+      ing['cannonical'] = self.cannonicalize_entity(ing['cannonical'])
 
   def findRecipes(self, query = {}, limit=0):
     for obj in self.recipe_coll.find(filter=query, limit=limit):
@@ -246,11 +261,6 @@ class RecipeDB:
     self.recipe_coll.update({"_id":ObjectId(id_)}, {"$set" : d}, upsert = False)
 
   def cannonicalize_entity(self, e, default=None):
-
-    # This is a hack to solve some entitymapping problems march 14, 2017 :(
-    if e == 'bulgur wheat' or e == 'bulgur': return 'bulgur'
-    if e == 'sesame seed paste' or e == 'sesame paste' or e == 'tahini': return 'tahini'
-
     if not ((e in self.entitymap_dic) or (e in self.entitymap_alt_dic)): return default
     if e in self.entitymap_alt_dic:
       return self.entitymap_alt_dic[e]
@@ -411,12 +421,26 @@ class RecipeDB:
     self.sub_coll.drop()
     
   def writeStats(self, name, description, table):
-    self.stats_coll.update_one({'name': name}, {'$set': {'name':name, 'description':description, 'table':table}}, upsert=True)
+    self.stats_coll.remove({'name':name})
+    n = len(table)
+    table_items = table.items()
+    ipart = 0
+    while len(table_items):      
+      chunk_size = min(len(table_items), MAX_STATS_TABLE_DOC_SIZE)
+      part_table_items = table_items[:chunk_size]
+      table_items = table_items[chunk_size:]
+      record = {'name': name, 'part' : ipart, 'description':description, 'table': part_table_items}
+      self.stats_coll.insert_one(record)
+      ipart = ipart + 1
 
   def getStats(self, name):
-    record = self.stats_coll.find_one({'name':name})
-    if record is None: return None
-    return dict(record['table'])
+    record = self.stats_coll.find({'name':name})
+    table_items = []
+    for r in record:
+      table_items = table_items + r['table']
+    for item in table_items:
+      item[0] = tuple_or_identity(item[0])
+    return dict(table_items)
 
   # with_gram: return a pair of lists, the first is the list of ingredients, the second is the corresponding grams
   # with_uid: return a pair of lists, the first is the list of ingredients, the second is the corresponding uids

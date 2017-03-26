@@ -125,7 +125,7 @@ if __name__ == "__main__":
   parser.add_option("-a", "--average_grams_table", dest="average_grams_table", help="Table with average grams of ingredient in recipes", default="ingredient_av_gram_ratio")
   parser.add_option("-d", "--num_draws", dest="num_draws", help="Number of draws (in case of ingredients method with draw by quantity)", default="20")
   parser.add_option("-x", "--mark_extreme", dest="mark_extreme", help="Mark ingredients if quantity is extreme, generating different types of ingredients for each ingredient", default="False")
-  parser.add_option("-s", "--substitute", dest="substitute", help="Randomly substitute ingredients using RDF info", default="False", metavar="SUBSTITUTE")
+  parser.add_option("-s", "--substitute", dest="substitute", help="Randomly substitute ingredients using RDF info (default:False)", default="False", metavar="SUBSTITUTE")
   parser.add_option("--sn", "--substitute_number", dest="substitute_number", help="Number of substituted recipe to generate", default="4", metavar="SUBSTITUTE_NUMBER")
   rdb = RecipeDB(option_parser = parser)
   (options, args) = parser.parse_args()

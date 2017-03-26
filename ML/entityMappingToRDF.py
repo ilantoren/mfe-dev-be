@@ -20,8 +20,9 @@ if __name__ == '__main__':
   entitymap_alt_dic = rdb.get_entitymap_alt_dic()
   rdfs = []
   for alt in entitymap_alt_dic:
-    if ent == alt: continue
     ent = entitymap_alt_dic[alt]
+    if ent == alt: continue
+    if ent == '' or alt == '': continue
     rdfs.append(RDF.RDF(origin=ENTITY_MAPPING_RDF_ORIGIN, x=alt, relation = RDF.EQUIVALENT_TO, y=ent))
 
   rdb.removeRDFsFromOrigin(ENTITY_MAPPING_RDF_ORIGIN)  

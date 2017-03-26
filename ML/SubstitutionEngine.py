@@ -17,7 +17,11 @@ import getopt
 from SupervisedML import *
 from optparse import OptionParser
 import Recipe
+import os
 from sklearn import svm
+import hashlib
+from CollectBasicStats import INGREDIENT_BIGRAM_FREQUENCY
+import RDF
 
 BULK_BUFFER_SIZE = 100 # size of batches for substitution writing
 
@@ -101,6 +105,7 @@ class SimpleSubstitution:
     if len(self.moreinfo): ret['moreinfo'] = self.moreinfo
     if len(self.timestamp): ret['timestamp'] = self.timestamp
     if len(self.workerId): ret['workerId'] = self.workerId
+    ret['uid'] = hashlib.sha1(ret.__str__()).hexdigest()
     return ret
 
 
@@ -250,10 +255,18 @@ class ManualRule_for_ListSinglePick(ManualRule):
     prob_served_cooked = 1 - prob_served_raw
     prob_part_of_sauce = 0.8 if rdb.cannonicalize_entity(ing_name) == rdb.cannonicalize_entity('tahini') else 0.0 # a patch for now feb 28 2017
     prob_for_greasing_pans = 0.0 # a patch for now feb 28 2017
+
+    recipe_has_vegetable = False
+    for ing_name in ing_names:
+      if self.rdb.getEntityUSDAFamily(ing_name) == 'Vegetables and Vegetable Products':
+        recipe_has_vegetable = True
+        break
+
+
     for i in range(len(ing_names)):
       if ing_names[i] == ing_name and ings[i]['gram'] is not None:
         ingredient_absolute_quantity_grams = ings[i]['gram']    
-      
+ 
     env = {
       'recipe_tag_prob' : r.getTagProb,
       'ingredient_absolute_quantity_grams' : ingredient_absolute_quantity_grams,
@@ -262,6 +275,7 @@ class ManualRule_for_ListSinglePick(ManualRule):
       'prob_part_of_sauce': prob_part_of_sauce,
       'prob_for_greasing_pans' : prob_for_greasing_pans,
       'recipe_has_ingredient' : recipe_has_ingredient,
+      'recipe_has_vegetable' : recipe_has_vegetable,
       '__builtin__' : {}}
 
     e = eval(cond, env)
@@ -277,6 +291,7 @@ class ManualRule_for_ListSinglePick(ManualRule):
     if debug: print 'Trying to apply %s to %s' % (self.db_document.__str__(), ings.__str__())
     if debug: print 'title = %s' % (r.getTitle())
     if debug: print 'tags = %s' % (r.getTags().__str__())
+
     for i in range(len(ings)):
       ing = ings[i]["cannonical"]
       uid = ings[i]["uid"]
@@ -370,7 +385,6 @@ class Word2VecRule(AutomaticRule):
         if not is_manual2 and self.debug: dict_increment(self.suspicious_entity_mappings, ing2)
         usda_item2 = self.rdb.getUSDAIngredientByNDB(ndb_no2)
         if usda_item2 is None:
-          print '!!!!', ing2
           dict_increment(self.suspicious_entity_mappings, ing2)
           continue
         if not 'foodGroup' in usda_item2: continue  # I've seen this with respect to ndb_no=0000
@@ -668,7 +682,10 @@ class SubstitutionEngine():
       for rule in rule_set:
         subs = subs + rule.apply(recipe)
       if not self.debug and len(subs)>0:
-        substitutionBuffer.append({'recipeId':recipe.getId() , 'subs':subs})
+        substitutionBuffer.append({
+          'recipeId':recipe.getId() , 
+          '_class' : 'com.mfe.model.recipe.Substitutions', 
+          'subs':subs})
         if len(substitutionBuffer) == BULK_BUFFER_SIZE:
           rdb.bulkInsertSubstitutions(substitutionBuffer)
           substitutionBuffer = []
@@ -683,30 +700,63 @@ class SubstitutionEngine():
         
 
 if __name__ == "__main__":
-  debug = 'debug' in sys.argv # to be in debug mode, write "debug" in command line
+
+  from RecipeNearestNeighbor import NearNeighborSubstitutionRule
   parser = OptionParser()
   parser.add_option("-v", "--vecname", dest="vecname", help="Name of vector mapping", default='word2vec', metavar="VECNAME")
   parser.add_option("-c", "--cvecname", dest="cvecname", help="Name of context vector mapping", default=None, metavar="CVECNAME")
   parser.add_option("-s", "--min_sim", dest="min_sim", help="Min similarity for word2vec sub", default="0.4", metavar="MIN_SIM")
   parser.add_option("-l", "--limit", dest="limit", help="Limit number of recipes", default="0", metavar="LIMIT")
-  parser.add_option("-x", "--delete_collection", dest="delete_collection", help="Delete substitutions collections before starting (default False)", default="False", metavar="DELETE_COLLECTION")
-  parser.add_option("--ids", "--recipe_ids", dest="recipe_ids", help="If you want to run on only few recipes, comma separated ids.  Default is empty list, which means run on all.", default="", metavar="RECIPE_ID")
+  parser.add_option("-x", "--delete_collection", dest="delete_collection", help="Delete substitutions collections before starting (default True)", default="True", metavar="DELETE_COLLECTION")
+  parser.add_option("--mo", "--manual_origin", dest="manual_origin", help="Origins of manual rules to work with as comma-separated list.  Blank (default) for all ", default="", metavar="MANUAL_ORIGIN")
+  parser.add_option("--ids", "--recipe_ids", dest="recipe_ids", help="Either name of json file with list of ids to run on, or comma-separated list of ids.  If left blank (default) will run on everything",
+default="", metavar="RECIPE_IDS")
+  parser.add_option("--nnbr", "--near_neighbors", dest="near_neighbors", help="Use near neighbors algorithm.  Default True", default="True", metavar = "NEAR_NEIGHBORS")
+  parser.add_option("--svn", "--sim_vecname", dest="sim_vecname", help="Name of vector for recipe similarity in near-neighbor rule", default="word2vec", metavar="SIM_VEC_NAME")
+  parser.add_option("--st", "--sim_threshold", dest="sim_threshold", help="Threshold for similarity in near-neighbor rule", default="0.6", metavar="SIM_THRESHOLD")
+  parser.add_option("--mt", "--match_threshold", dest="match_threshold", help="Threshold for match in near-neighbor rule", default="0.6", metavar="MATCH_THRESHOLD")
+  parser.add_option("--d", "--debug", dest="debug", help="Debug mode (default False)", default="False", metavar="DEBUG")
+  parser.add_option("--grt", "--gram_ratio_threshold", dest="gram_ratio_threshold", help="Maximal ratio between gram values of ingredients of two recipes that is allowed for match.  Default 10.", default="10", metavar="GRAM_RATIO_THRESHOLD")
   rdb = IOTools.RecipeDB(option_parser = parser)
   (options, args) = parser.parse_args()
   debugManualRulesFile = open('data/manual_rules_count.txt', 'wt')
 
+  debug = eval(options.debug)
+
   se = SubstitutionEngine(rdb=rdb,debug=debug)
 
   # Get rules from the rules db
+  manual_origin = [] if options.manual_origin=="" else options.manual_origin.split(",")
+  manual_origin = map(lambda x: x.lower(), manual_origin)
+  print 'Using only manual substitution rules of origin ', manual_origin.__str__()
+  num_rules=0
   for rule in rdb.getManualSubRulesColl().find({}):
+    if len(manual_origin) and rule["origin"].lower() not in manual_origin: continue
+    num_rules = num_rules + 1
     se.addRule(ManualRule_for_ListSinglePick(
       rdb = rdb,
       db_document = rule, debug_file = debugManualRulesFile, debug=debug
     ))
-  se.addRule(Word2VecRule(rdb=rdb, vecname = options.vecname, cvecname = options.cvecname, p=eval(options.min_sim)))
+  print 'Total number of manual rules = %d' % num_rules
+  #se.addRule(Word2VecRule(rdb=rdb, vecname = options.vecname, cvecname = options.cvecname, p=eval(options.min_sim)))
+
+  if eval(options.near_neighbors):
+    se.addRule(
+      NearNeighborSubstitutionRule(
+        rdb=rdb, sim_vecname = options.sim_vecname, 
+        sim_threshold=eval(options.sim_threshold), match_threshold=eval(options.match_threshold), 
+        source_ing = '', debug=debug,
+        bigram_table_name = INGREDIENT_BIGRAM_FREQUENCY,
+        gram_ratio_threshold = eval(options.gram_ratio_threshold)))
+
 
   if eval(options.delete_collection): rdb.deleteSubstitutionsCollection()
-  recipe_ids = options.recipe_ids.split(',') if len(options.recipe_ids) else []
+  recipe_ids = []
+  if len(options.recipe_ids):
+    if os.path.exists(options.recipe_ids):
+      recipe_ids = json.loads(file(options.recipe_ids).read())["ids"]
+    else:
+      recipe_ids = options.recipe_ids.split(",")
   se.run(limit=eval(options.limit), recipe_ids = recipe_ids)
 
   debugManualRulesFile.close()
