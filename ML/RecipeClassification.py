@@ -338,8 +338,7 @@ if __name__ == "__main__":
       tags_json.append({"name" : t, "probability" : "1.0", "origin" : "AlgorithmDec2016", "version" : "1.1"}) 
     rdb.bulkUpdateOne(r["_id"], 
         {"tags" : tags_json})
-    sys.stdout.write('%d\n' %c)
+    sys.stdout.write('\r%d' %c)
     c = c + 1
-  print 'Here'
   rdb.bulkFlush()
-
+  print

@@ -23,7 +23,6 @@ DEFAULT_INSTRUCTION_ANNOTATION_COLLECTION_NAME = 'instructionAnnotation'
 DEFAULT_ENTITY_MAPPING_COLLECTION_NAME = 'entityMapping'
 DEFAULT_RECIPE_COLLECTION_NAME = 'recipePOJO'
 DEFAULT_INGREDIENT_COLLECTION_NAME = 'ingredientPOJO'
-DEFAULT_ENTITY_FEATURES_COLLECTION_NAME = 'entityFeatures'
 DEFAULT_MANUAL_SUB_RULES_COLLECTION_NAME = 'manualSubRules'
 DEFAULT_SUB_COLLECTION_NAME = 'substitutions'
 DEFAULT_FEEDBACK_COLLECTION_NAME = 'feedback'
@@ -103,7 +102,6 @@ class RecipeDB:
                recipe_collection_name = DEFAULT_RECIPE_COLLECTION_NAME,
                entity_mapping_collection_name = DEFAULT_ENTITY_MAPPING_COLLECTION_NAME,
                instruction_annotation_collection_name = DEFAULT_INSTRUCTION_ANNOTATION_COLLECTION_NAME,
-               entity_features_collection_name = DEFAULT_ENTITY_FEATURES_COLLECTION_NAME,
                manual_sub_rules_collection_name = DEFAULT_MANUAL_SUB_RULES_COLLECTION_NAME,
                sub_collection_name = DEFAULT_SUB_COLLECTION_NAME,
                feedback_collection_name = DEFAULT_FEEDBACK_COLLECTION_NAME,
@@ -135,7 +133,6 @@ class RecipeDB:
     self.db = self.client[DB]
     self.recipe_coll = self.db[recipe_collection_name]
     self.entitymap_coll = self.db[entity_mapping_collection_name]
-    self.entityfeatures_coll = self.db[entity_features_collection_name]
     self.manualSubRules_coll = self.db[manual_sub_rules_collection_name]
     self.instannot_coll = self.db[instruction_annotation_collection_name]
     self.sub_coll = self.db[sub_collection_name]
@@ -186,6 +183,14 @@ class RecipeDB:
       if ing['source'] in ['USDA SR28', 'SR27']:
         self.ingredients_dic[int(ing['uid'])] = ing
 
+  # Cleanup before running full substitution script
+  def dropAllSubstitutionCollections(self):
+    self.manualSubRules_coll.drop()
+    self.sub_coll.drop()
+    self.entityvecs_coll.drop()
+    self.recipevecs_coll.drop()
+    self.rdf_coll.drop()
+    self.stats_coll.drop()
   def getEntityUSDAFamily(self, cann):
     if not cann in self.entitymap_dic: return None
     ent = self.entitymap_dic[cann]
@@ -330,6 +335,9 @@ class RecipeDB:
       logging.info("Could not perform bulk operation.")
       pprint(bwe.details)
       sys.exit(-1)
+    except:
+      # This is typicaly because the bulk buffer is empty
+      pass
       
 
   def updateOne(self, _id, post):
