@@ -1,0 +1,10 @@
+#!/bin/bash
+
+mongo  mfe-front-end --eval "db.dropDatabase();"
+rm -rf data/dump/mfe-front-end/*
+mongodump -h ds151719-a0.mlab.com:51719 -d mfe-front-end -u nailon -p andersen7  -o data/dump/mfe-front-end
+mongorestore data/dump/mfe-front-end
+
+
+
+
