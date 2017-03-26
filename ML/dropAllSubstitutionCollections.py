@@ -10,4 +10,5 @@ if __name__ == "__main__":
   (options, args) = parser.parse_args()
 
   rdb = IOTools.RecipeDB(config_file = options.config)
-  rdb.dropAllSubstitutionCollections
+  rdb.dropAllSubstitutionCollections()
+
