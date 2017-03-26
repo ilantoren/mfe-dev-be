@@ -47,8 +47,8 @@ def none2str(x):
 def match_recipes_munkres(r1, r2, graph):
   ings1 = r1.getIngs()
   ings2 = r2.getIngs()
-  print 'ings1=', map(lambda x:x['cannonical'], ings1)
-  print 'ings2=', map(lambda x:x['cannonical'], ings2)
+  #print 'ings1=', map(lambda x:x['cannonical'], ings1)
+  #print 'ings2=', map(lambda x:x['cannonical'], ings2)
   n = max(len(ings1), len(ings2))
   cost = []
   for i in range(n):
@@ -129,8 +129,8 @@ def find_subs(rdb1, rdb2, graph, x, neighbor_ids, t=0.35, source_ing = '', match
     match_, match_info_ = match_recipes(neighbor_recipe, recipe, graph)
     if match < match_thresh or match_ < match_thresh: continue
     clean_neighbor_recipes.append(neighbor_recipe)
-    print match, match_info
-    print '  %s %s: %s' % (neighbor_recipe.getId(), neighbor_recipe.getTitle(), neighbor_recipe.getCannonicalIngNames())
+    #print match, match_info
+    #print '  %s %s: %s' % (neighbor_recipe.getId(), neighbor_recipe.getTitle(), neighbor_recipe.getCannonicalIngNames())
   neighbor_recipes = clean_neighbor_recipes
 
   print 'num neighbors = %d' % len(neighbor_recipes)
@@ -140,7 +140,7 @@ def find_subs(rdb1, rdb2, graph, x, neighbor_ids, t=0.35, source_ing = '', match
     if source_ing != '' and ing['cannonical'] != source_ing: continue
     #if myfloat(ing['gram'] == 0.0): continue
     gram = myfloat(ing['gram'])
-    print none2str(ing['cannonical']) + '--->'
+    #print none2str(ing['cannonical']) + '--->'
     #if not w2vd.hasVector(ing): continue
     ing_counter = {}
     for neighbor_recipe in neighbor_recipes:
@@ -155,8 +155,8 @@ def find_subs(rdb1, rdb2, graph, x, neighbor_ids, t=0.35, source_ing = '', match
         if not ing['cannonical'] in sources: continue
         increment(ing_counter, ing_['cannonical'])
     
-    for ing_ in ing_counter:
-      print '  ', ing_, ing_counter[ing_]
+    #for ing_ in ing_counter:
+    #  print '  ', ing_, ing_counter[ing_]
 
 
 class NearNeighborSubstitutionRule(AutomaticRule):
@@ -205,12 +205,6 @@ class NearNeighborSubstitutionRule(AutomaticRule):
       near_recipes2.append(near_recipe)
     near_recipes = near_recipes2
 
-    # DEBUG DEBUG
-    for near_recipe in near_recipes:
-      for ing in near_recipe.getIngs():
-        if ing["cannonical"] == 'vegetable oil spray':
-          print near_recipe.getId()
-
     if self.debug:
       print "Number of matching recipes: ", len(near_recipes)
 
@@ -223,7 +217,7 @@ class NearNeighborSubstitutionRule(AutomaticRule):
       if cann is None: 
         print 'Warning, no cannonical for ' + ing['food']
         continue
-      print none2str(cann) + '--->'
+
       ing_counter = {}
       lsp = ListSinglePick(
         source = ing["food"],  # the original (un-cannonicalized) ingredient 
@@ -248,7 +242,6 @@ class NearNeighborSubstitutionRule(AutomaticRule):
           if not cann in sources: continue 
           if self.violation_by_bigram(cann, cann_, recipe): continue
           options_quickref.add(cann_)         
-          print '  ' + cann_
           lsp.addOption(SimpleSubstitution(
             target = cann_,
             targetId = self.rdb.getEntityIdByCannonical(cann_),

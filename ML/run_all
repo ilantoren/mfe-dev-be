@@ -13,7 +13,7 @@ python RecipeClassification.py --config $1
 python ComputeAndSaveRecipeVecs.py --config $1
 python CollectBasicStats.py  --config $1
 python legacyFeedback.py --config $1
-python SubstitutionEngine.py  -x True --manual_origin mfe,book --near_neighbors True  --supervisedml False --config $1 --id $2
+python SubstitutionEngine.py  -x True --manual_origin mfe,book --near_neighbors True  --supervisedml False --config $1 --ids $2
 
 
 
