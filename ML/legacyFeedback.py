@@ -18,7 +18,7 @@ RICE_SUB_TARGETS = ['brown rice', 'jasmine rice', 'wheat berries', 'grated cauli
 TYPE = 'substitution'
 TASK_ID = 'legacy:rice substitutions'
 
-RICE_FILE_CONTENTS = '''Id,Url,Class a,Class b,brown rice,jasmine rice,wheat berries,grated cauliflower,Bulgur,Quinoa,Note
+RICE_FILE_CONTENTS = '''Id,Url,Class a,Class b,brown rice,jasmine rice,wheat berries,grated cauliflower,bulgur,quinoa,Note
 5767979be4b0aa7a3941bdd8,http://www.yummly.com/recipe/Inside-Out-Stuffed-Peppers-Allrecipes,?,,,,,,,,
 5763a904e4b0ad09acae7c89,http://www.foodnetwork.com/recipes/patrick-and-gina-neely/dirty-rice-stuffed-collards-recipe.html,? Dirty rice a new term,,,,,,,,
 5763a60de4b0ad09acadf021,http://www.recipetips.com/recipe-cards/t--102307/inside-out-stuffed-peppers-2.asp,casserole,,,,,,,,
@@ -140,25 +140,30 @@ def convertCSVToFeedbackArray(file_string, source_ing, target_ing):
 
     if cols[col_i] in ['0', '1']:
       # First, identify the "rice" ingredient  in recipe
-      recipe = rdb.find_one(query = {'urn' : urn})
-      if recipe is None:
+      recipes = list(rdb.findRecipes(query = {'urn' : urn}))
+#      recipe = rdb.find_one(query = {'urn' : urn})
+      if not len(recipes):
         print 'Couldnt find recipe with urn %s, skipping' % urn
         missing_urns.append(urn)
         continue
-      ings = IOTools.getCannonicalIngredientList(recipe)
+      recipe = recipes[0]
+      if len(recipes)>1:
+        print 'Warning, found multiple recipes with urn ', urn
+      ings = map(lambda x: x["cannonical"], recipe.getIngs())
       source_in_recipe = None
       for ing in ings:
+        if ing is None: continue
         if ing.lower().find(source_ing) >= 0:
           source_in_recipe = ing
           break
       if source_in_recipe is None:
-        print 'Couldnt find rice in recipe %s.  Ingredients are: %s' % (recipe['_id'].__str__(), ings.__str__())
+        print 'Couldnt find rice in recipe %s.  Ingredients are: %s' % (recipe.getId(), ings.__str__())
         continue
 
       polarity = int(cols[col_i]) * 2 - 1  # convert to -1/1
       f = Feedback(
         personId = PERSONID,
-        recipeId = recipe['_id'], # the new Id's don't match, we have to match by urn
+        recipeId = recipe.getId(), # the new Id's don't match, we have to match by urn
         urn = urn,
         DBVersion = 'legacy',
         timestamp = '',
@@ -189,7 +194,7 @@ for f in feedback:
     feedback_by_urn[f.urn].feedback.append(f.feedback[0])
 
 for urn in feedback_by_urn:
-  print urn, feedback_by_urn[urn].getStruct()
+  print urn, feedback_by_urn[urn].getDict()
 
 feedback = feedback_by_urn.values()
 
@@ -201,10 +206,10 @@ for f in feedback:
   existing_record = rdb.get_feedback_coll().find_one({'urn' : f.urn, 'taskId' : TASK_ID})
   if existing_record:
     print 'Feedback for %s already exists in record id %s' % (f.urn, existing_record['_id'].__str__())
-    rdb.get_feedback_coll().update({'_id' : existing_record['_id']}, {"$set" : f.getStruct()}, upsert=False)  #{'feedback' : f.getStruct()['feedback'], 'recipeId' : f.recipeId}}, upsert=False)
+    rdb.get_feedback_coll().update({'_id' : existing_record['_id']}, {"$set" : f.getDict()}, upsert=False) 
   else:
     print 'Feedback for %s doesnt exist, creating new record' % f.urn
-    rdb.get_feedback_coll().insert_one(f.getStruct())
+    rdb.get_feedback_coll().insert_one(f.getDict())
 
 
 print 'Removing urns that are missing from recipe collection from feedback collection...'

@@ -5,13 +5,8 @@ import numpy as np
 import sys
 from sklearn import svm
 import math
-
-
-# Given a numpy vector, extend it to index+1 coordinates if it has fewer, otherwise do nothing
-def possiblyExtendVector(v, index):
-  if len(v) < index+1:
-    v.extend([0.0] * (index+1-len(v)))
-
+from optparse import OptionParser
+from bson.objectid import ObjectId
 
 def getTotalError(clf, X, Y):
   Y_ = clf.predict(X)
@@ -56,72 +51,23 @@ def splitTrainValidate(X, Y, validation_ratio):
     Y_val.append(Y[rp[i]])
   return X_train, Y_train, X_val, Y_val
 
-#######################################################################
-# Computes a feature vector for a recipe.
-# The feature vector consists of two parts:
-# - A word2vec-like vector, which is averaged over all ingredients.
-# - A tag-based vector
-########################################################################
-def getFeatureVector(rdb, recipe, entityVecType = 'word2vec'):
-  ings, original_ings = IOTools.getCannonicalIngredientList(recipe)
-  if not len(ings): return None
-  first = True
-  count = 0
-  res = None
-  for ing in ings:
-    v = rdb.getEntityVec(ing, entityVecType)
-    if v is None: continue
-    if (first):   
-      res = np.array(v)
-      count = 1
-      first = False
-    else:       
-      res = res + np.array(v)
-      count = count + 1
-  if res is None: return None
-  res = res / count
-  return res
-
-def getTagVector(recipe, tag2index):
-  res = []
-  if not 'tags' in recipe: return res
-  for tag in recipe['tags']:
-    tagname = tag['name']
-    if tagname in tag2index:
-      index = tag2index[tagname]
-    else:
-      index = len(tag2index)
-      tag2index[tagname] = index
-    possiblyExtendVector(res, index)
-    if 'probability' in tag: 
-      res[index] = float(tag['probability'])
-    else:
-      res[index] = 1.0 if tag['value'].lower() == 'true' else 0.0
-  return res
 
 class SupervisedML:
 
   # Initializing this class requires labeled examples
 
-  def __init__(self, rdb, examples, labels, classifiers, num_folds=5):
+  def __init__(self, examples, labels, classifiers, num_folds=5):
     self.examples = examples
     self.labels = labels
-    self.rdb = rdb
     self.tag2index = {}
     X = []
     Y = []
     max_dim = 0
     for i in range(len(examples)):
-      r = examples[i] 
-      l = labels[i]
-      v = getFeatureVector(rdb, r) # as np.array
-      vtag = getTagVector(r, self.tag2index)   # as list
+      v = examples[i]
       if v is None: continue
-      max_dim = max(max_dim, len(vtag)+len(v))
-      X.append(v.tolist() + vtag)
+      X.append(v)
       Y.append(labels[i])
-    for v in X:
-      possiblyExtendVector(v, max_dim-1)
     self.dim = max_dim
     min_err = 1.5
     best_classifier = None
@@ -142,10 +88,7 @@ class SupervisedML:
     print 'Training error: %f' % ((getTotalError(self.best_classifier, X_val, Y_val)*1.0)/len(X))
     
 
-  def predict(self, recipe):
-    v = getFeatureVector(self.rdb, recipe)
-    vtag = getTagVector(recipe, self.tag2index)
-    v = np.append(v, vtag)[:self.dim]
+  def predict(self, v):
     return self.best_classifier.predict_proba([v])[0][1]  # return probability of class "1"
 
 
@@ -156,34 +99,64 @@ def isRice(ing):
   return ing.lower() in ['rice', 'white rice', 'brown rice', 'jasmine rice']
 
 if __name__ == '__main__':
-  rdb = IOTools.RecipeDB(argv = sys.argv)
+  option_parser = OptionParser()
+  option_parser.add_option("--config", "--config", dest="config", help="Configure location of mongo", default="local.config")
+  (options, args) = option_parser.parse_args()
+  rdb = IOTools.RecipeDB(config_file = options.config)
 
-  recipes = rdb.findFeedback(query={'taskId' : 'legacy:rice substitutions'})
+  feedbacks = rdb.findFeedback(query={'taskId' : 'legacy:rice substitutions'})
   ids = []
   labels = []
-  for r in recipes:
-    recipeId = r['recipeId']
-    for f in r['feedback']:
+  for feedback in feedbacks:
+    recipe = list(rdb.findRecipes(query={'urn' : feedback['urn']}))
+    if len(recipe)==0:
+      print 'Couldnt find recipe for urn %s, skipping' % feedback['urn']
+      continue
+    if len(recipe) > 0:
+      print 'Warning, multiple recipes with urn %s, taking 1st' % feedback['urn']
+    recipe = recipe[0]
+    for f in feedback['feedback']:
       if f['info']['target'] == 'grated cauliflower':
         labels.append((f['info']['polarity']+1)/2)
-        ids.append(recipeId)
-  recipes = rdb.find(query={'_id' : {'$in' : ids}})
-  recipe_by_id = {}
+        ids.append(recipe.getId())
+  
+  recipe_vecs = rdb.getRecipeVecs('word2vec', {'recipeId' : {"$in" : ids}})
+  print recipe_vecs
+
+  examples = map(lambda x: recipe_vecs[x] if x in recipe_vecs else None, ids)
+  zipped = zip(examples, labels)
+  zipped = filter(lambda x: x[0] is not None, zipped)
+  unzipped = zip(*zipped)
+  examples = unzipped[0]
+  labels = unzipped[1]
+
+  print examples
+  print labels
+  print 'Found %d examples with recipevecs ' % len(examples)
+  
+
+  classifiers = [
+    svm.SVC(C=0.1, probability = True), 
+    svm.SVC(C=1, probability = True), 
+    svm.SVC(C=5, probability = True), 
+    svm.SVC(C=10, probability = True), 
+    svm.SVC(C=20, probability = True), 
+    svm.SVC(C=50, probability = True)]
+  sml = SupervisedML(examples, labels, classifiers)
+  recipes = rdb.findRecipes(query={})
   for r in recipes:
-    recipe_by_id[r['_id']] = r
-  examples = map(lambda x: recipe_by_id[x], ids)
-  classifiers = [svm.SVC(C=0.1, probability = True), svm.SVC(C=1, probability = True), svm.SVC(C=5, probability = True), svm.SVC(C=10, probability = True), svm.SVC(C=20, probability = True), svm.SVC(C=50, probability = True)]
-  sml = SupervisedML(rdb, examples, labels, classifiers)
-  recipes = rdb.find(query={})
-  for r in recipes:
-    ings, original_ings = IOTools.getCannonicalIngredientList(r)
+    ings = r.getIngs()
+    canns = map(lambda x: x['cannonical'], ings)
     found = False
-    for ing in ings:
-      if isRice(ing.lower()):
+    for cann in canns:
+      if cann is not None and isRice(cann.lower()):
         found = True
         break
     if not found: continue
-    print r['_id'], sml.predict(r), r['title'] if 'title' in r else ''
+    vec = rdb.getRecipeVecs('word2vec', {'recipeId' : r.getId()})
+    if not len(vec): continue
+    vec = vec[r.getId()]
+    print r.getId(), sml.predict(vec), r.getTitle()
 
 #  print data
 

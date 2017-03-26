@@ -8,7 +8,6 @@ from sets import *
 import numpy as np
 import sys
 import math
-from stemming.porter2 import stem
 from optparse import OptionParser
 from bson.objectid import ObjectId
 import re

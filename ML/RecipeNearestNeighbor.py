@@ -162,7 +162,7 @@ def find_subs(rdb1, rdb2, graph, x, neighbor_ids, t=0.35, source_ing = '', match
 class NearNeighborSubstitutionRule(AutomaticRule):
   def __init__(self, rdb, sim_vecname = 'word2vec', sim_threshold = 0.6, match_threshold = 0.6, source_ing = '', debug=False, bigram_table_name = None, limit_sim=100, gram_ratio_threshold=10):
     self.rdb = rdb
-    self.recipe_vecs = rdb.readAllRecipeVecs(sim_vecname)
+    self.recipe_vecs = rdb.getRecipeVecs(sim_vecname)
     self.sim_threshold = sim_threshold
     self.match_threshold = match_threshold
     self.source_ing = source_ing # This is just used for debugging, in case you want to debug substitution of a single ingredient
@@ -206,7 +206,6 @@ class NearNeighborSubstitutionRule(AutomaticRule):
     near_recipes = near_recipes2
 
     # DEBUG DEBUG
-    print '222222222'
     for near_recipe in near_recipes:
       for ing in near_recipe.getIngs():
         if ing["cannonical"] == 'vegetable oil spray':
@@ -257,7 +256,7 @@ class NearNeighborSubstitutionRule(AutomaticRule):
             probability = 0.8,
             moreinfo = ''))
       if not len(lsp.options): continue
-      res.append(lsp.getJSON())
+      res.append(lsp.getDict())
     return res 
             
 
@@ -287,8 +286,8 @@ if __name__ == "__main__":
   graph = rdb2.getRDFGraph(['foodsubs', 'manual rules', 'entityMapping'])
   q = Q.PriorityQueue(maxsize=eval(options.k))
   
-  recipe_vecs1 = rdb1.readAllRecipeVecs(options.vecname)
-  recipe_vecs2 = rdb2.readAllRecipeVecs(options.vecname)
+  recipe_vecs1 = rdb1.GetRecipeVecs(options.vecname)
+  recipe_vecs2 = rdb2.GetRecipeVecs(options.vecname)
 
 
   if options.x != 'random' :

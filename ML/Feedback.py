@@ -15,7 +15,7 @@ class Feedback:
 
 
   # For writing as mongo object
-  def getStruct(self):
+  def getDict(self):
     return {
       'personId'  : self.personId,
       'recipeId' : self.recipeId,

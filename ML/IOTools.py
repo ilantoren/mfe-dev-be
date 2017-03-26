@@ -12,7 +12,6 @@ from pymongo.errors import BulkWriteError
 from pymongo import UpdateOne, TEXT
 import sys
 from pprint import pprint
-from optparse import OptionParser
 from RDF import RDF, RDFGraph
 from Recipe import Recipe
 import json
@@ -150,6 +149,7 @@ class RecipeDB:
     self.entitymap_alt_dic = {}
     self.entityvecs_dic = {}
     self.rdf_graphs = {}
+    self.recipevecs_query_cache = {}
 
     cursor = self.entitymap_coll.find({})
     i = 0
@@ -378,12 +378,15 @@ class RecipeDB:
   def flushRecipeVecs(self):
     self.recipevecs_coll.insert_many(self.recipe_vecs_buffer)
 
-  def readAllRecipeVecs(self, vecname):
-    cursor = self.recipevecs_coll.find({})
+  def getRecipeVecs(self, vecname, query = {}):
+    if query.__str__() in self.recipevecs_query_cache:
+      return self.recipevecs_query_cache[query.__str__()]
+    cursor = self.recipevecs_coll.find(query)
     ret = {}
     for c in cursor:
       if vecname in c:
         ret[c['recipeId'].__str__()] = c[vecname]
+    self.recipevecs_query_cache[query.__str__()] = ret
     return ret
 
   def getManualSubRulesColl(self):

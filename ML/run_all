@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 python writeManualSubRulesToDB.py
 python Crawl_foodsubs.com.py 
 python entityMappingToRDF.py
@@ -10,8 +9,8 @@ python WriteWord2VecToDB.py --vecname word2vec -f data/word2vec.ing.permute.sub.
 python RecipeClassification.py
 python ComputeAndSaveRecipeVecs.py
 python CollectBasicStats.py
-#python legacyFeedback.py --mongo $1
-#python SubstitutionEngine.py  --ids $1
+python legacyFeedback.py
+python SubstitutionEngine.py  -x --manual_origin mfe,book --near_neighbors True  --supervisedml True
 
 
 

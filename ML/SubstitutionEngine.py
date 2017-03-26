@@ -22,6 +22,7 @@ from sklearn import svm
 import hashlib
 from CollectBasicStats import INGREDIENT_BIGRAM_FREQUENCY
 import RDF
+from bson.objectid import ObjectId
 
 BULK_BUFFER_SIZE = 100 # size of batches for substitution writing
 
@@ -90,7 +91,7 @@ class SimpleSubstitution:
     self.workerId = workerId
 
   # for serialization, some default values are omitted
-  def getJSON(self):
+  def getDict(self):
     ret = {}
     if len(self.source): ret['source'] = self.source
     if not self.sourceId is None: ret['sourceId'] = self.sourceId.__str__()	
@@ -133,7 +134,7 @@ class ListSinglePick(Substitution):
   def len(self):
     return len(self.options)
 
-  def getJSON(self):
+  def getDict(self):
     ret = {'type' : 'list-single-pick'}
     if len(self.source): 
       ret['source'] = self.source
@@ -148,7 +149,7 @@ class ListSinglePick(Substitution):
     if len(self.timestamp): ret['timestamp'] = self.timestamp
     if len(self.name): ret['name'] = self.name
 
-    ret['options'] = map(lambda x: x.getJSON(), self.options)
+    ret['options'] = map(lambda x: x.getDict(), self.options)
     return ret
 
 class MultiFoodSubstition(Substitution):
@@ -158,8 +159,8 @@ class MultiFoodSubstition(Substitution):
   def AddSub(self, sub):
     self.list.append(sub)
   
-  def getJSON(self):
-    ret = {'type' : 'multi-food-change', 'and' : map(lambda x: x.getJSON(), self.list)}
+  def getDict(self):
+    ret = {'type' : 'multi-food-change', 'and' : map(lambda x: x.getDict(), self.list)}
     return ret
 
 
@@ -323,7 +324,7 @@ class ManualRule_for_ListSinglePick(ManualRule):
             moreinfo = self.targets_dic[t]['moreinfo'] if 'moreinfo' in self.targets_dic[t] else ''))
         res.append(lsp)
         self.debug_count = self.debug_count + 1
-    return map(lambda x: x.getJSON(), res)
+    return map(lambda x: x.getDict(), res)
             
   def debugWorkSummary(self):
     if self.debug_file is not None:
@@ -402,7 +403,7 @@ class Word2VecRule(AutomaticRule):
       if not lsp.len(): continue
       if not is_manual and self.debug: dict_increment(self.suspicious_entity_mappings, ing)
       if self.debug: dict_increment(self.applied_subs, self.debugStr(lsp))
-      res.append(lsp.getJSON())            
+      res.append(lsp.getDict())            
     return res
  
 
@@ -412,7 +413,7 @@ class Word2VecRule(AutomaticRule):
   def debugStr(self, lsp):
     
     # remove recipe id's, so we can uniquely count substitution applications
-    js = lsp.getJSON()
+    js = lsp.getDict()
     js['sourceId'] = '#'
     js['instanceId'] = '#'
     for o in js['options']: o['targetId']='#'
@@ -506,10 +507,8 @@ class LegacyRule(AutomaticRule):
           substitute_text = '%s=>%s' % (source_cann, target_cann)
           dict_increment(self.counts, substitute_text)
           if substitute_text == 'rice vinegar=>brown rice' or substitute_text == 'grated cauliflower=>brown rice': # a weird substitute
-            self.general_debug = self.general_debug + 'Suspicious sub: ' + substitute_text + ' ' + legacy['_id'].__str__() + '\n'
-          
-          
-          res.append(lsp.getJSON())
+            self.general_debug = self.general_debug + 'Suspicious sub: ' + substitute_text + ' ' + legacy['_id'].__str__() + '\n'                   
+          res.append(lsp.getDict())
     return res
 
   def debugWorkSummary(self):
@@ -530,36 +529,45 @@ class LegacyRule(AutomaticRule):
 # The feedbackQuery is a mongo query that selects the feedback entries relevant to this
 # rule. 
 # The sources is a set or an array of all ingredient sources (e.g. 'rice', 'white rice', 
-# 'brown rice'.  Target is the target ingredient
+# 'brown rice'.  Target is the target ingredient.
+# Vecname is the vector name from recipeVecs to use
 ###########################################################################################
 class SupervisedMLRule(AutomaticRule):
-  def __init__(self, rdb, feedbackQuery, sources, target):
+  def __init__(self, rdb, feedbackQuery, sources, target, vecname):
+
     self.rdb = rdb
     self.target = target
     self.sources = sources
+    self.recipevecs = rdb.getRecipeVecs(vecname)
+
     if target in rdb.get_entitymap_dic():
       self.targetId = rdb.get_entitymap_dic()[target]['_id']
     else:
       self.targetId = ''
     print 'Learning %s / %s' % (feedbackQuery.__str__(), target)
+
     feedbacks = rdb.findFeedback(query=feedbackQuery)
-    self.query = feedbackQuery
     ids = []
     labels = []
+    self.query = feedbackQuery
     for feedback in feedbacks:
       recipeId = feedback['recipeId']
       for f in feedback['feedback']:
-        if f['info']['target'] == target: #  e.g. 'grated cauliflower'
+        if rdb.cannonicalize_entity(f['info']['target']) == target: #  e.g. 'grated cauliflower'
           labels.append((f['info']['polarity']+1)/2)
           ids.append(recipeId)
-    recipes = rdb.find(query={'_id' : {'$in' : ids}})
-    recipe_by_id = {}
-    for r in recipes:
-      recipe_by_id[r['_id']] = r
+
     for _id in ids:
-      if not _id in recipe_by_id:
+      if not _id in self.recipevecs:
         print 'Warning ', _id
-    examples = map(lambda x: recipe_by_id[x], ids)
+    examples = map(lambda x: self.recipevecs[x] if x in self.recipevecs else None, ids)
+
+    zipped = zip(examples, labels)
+    zipped = filter(lambda x: x[0] is not None, zipped)
+    unzipped = zip(*zipped)
+
+    examples = unzipped[0]
+    labels = unzipped[1]
 
     # Try a bunch of SVM classifiers, with different regularization parameters C
     # 5-flod cross validations will be done in the supervisedML class to choose the best.
@@ -570,42 +578,48 @@ class SupervisedMLRule(AutomaticRule):
       svm.SVC(C=5, probability = True), svm.SVC(C=10, probability = True), 
       svm.SVC(C=20, probability = True), svm.SVC(C=50, probability = True)]
 
-    self.sml = SupervisedML(rdb, examples, labels, classifiers)
+    self.sml = SupervisedML(examples, labels, classifiers)
     self.debug_counter = 0
     self.debug_total_prob = 0.0
     print 'Done.'
 
   def isSourceAdmissible(self, ing):
-    return ing.lower() in self.sources
+    return ing is not None and ing.lower() in self.sources
 
   def apply(self, recipe):
     res = []
-    ings, original_ings, uids = self.rdb.getCannonicalIngredientList(recipe, with_uid = True)
+    ings = recipe.getIngs()
+    canns = map(lambda x: x["cannonical"], ings)
+    uids = map(lambda x: x["uid"], ings)
     found = False
     for ii in range(len(ings)):
-      ing = ings[ii]
-      if self.isSourceAdmissible(ing):
+      cann = canns[ii]
+      if self.isSourceAdmissible(cann):
         instanceId = uids[ii] 
         found = True
         break
     if not found: return res
-    prob = self.sml.predict(recipe)
+    
+    if not (recipe.getId() in self.recipevecs): return res
+
+    vec = self.recipevecs[recipe.getId()]
+    prob = self.sml.predict(vec)
+
     self.debug_counter = self.debug_counter + 1
     self.debug_total_prob = self.debug_total_prob + prob
     #if not ing in self.rdb.get_entitymap_dic()
-    cann_ing = self.rdb.cannonicalize_entity(ing)
-    if cann_ing is None: return res
-    if ing != cann_ing: print 'Warning: source %s of ML rule is not cannonical (cannonical=%s)' % (ing, cann_ing)
+#    cann_ing = self.rdb.cannonicalize_entity(ing)
+    if cann is None: return res
     lsp = ListSinglePick(
-      source = cann_ing,
-      sourceId = self.rdb.get_entitymap_dic()[cann_ing]['_id'],
+      source = cann,
+      sourceId = self.rdb.get_entitymap_dic()[cann]['_id'],
       instanceId = instanceId, 
       version = "1",
       origin = 'SupervisedML:FromLegacyLabels',
       name = 'sources:%s:target=%s' % (self.sources.__str__(), self.target))  
     lsp.addOption(SimpleSubstitution(
       target = self.target, targetId = self.targetId, probability = prob))
-    res.append(lsp.getJSON())
+    res.append(lsp.getDict())
     return res
     
 
@@ -693,9 +707,8 @@ class SubstitutionEngine():
     if len(substitutionBuffer):
       rdb.bulkInsertSubstitutions(substitutionBuffer)
 
-    if self.debug:
-      for rule in self.rules:
-       rule.debugWorkSummary()
+    for rule in self.rules:
+     rule.debugWorkSummary()
 
         
 
@@ -703,8 +716,8 @@ if __name__ == "__main__":
 
   from RecipeNearestNeighbor import NearNeighborSubstitutionRule
   parser = OptionParser()
-  parser.add_option("-v", "--vecname", dest="vecname", help="Name of vector mapping", default='word2vec', metavar="VECNAME")
-  parser.add_option("-c", "--cvecname", dest="cvecname", help="Name of context vector mapping", default=None, metavar="CVECNAME")
+  parser.add_option("-v", "--vecname", dest="vecname", help="Name of vector mapping (for word2vec alg)", default='word2vec', metavar="VECNAME")
+  parser.add_option("-c", "--cvecname", dest="cvecname", help="Name of context vector mapping (for word2vec alg)", default=None, metavar="CVECNAME")
   parser.add_option("-s", "--min_sim", dest="min_sim", help="Min similarity for word2vec sub", default="0.4", metavar="MIN_SIM")
   parser.add_option("-l", "--limit", dest="limit", help="Limit number of recipes", default="0", metavar="LIMIT")
   parser.add_option("-x", "--delete_collection", dest="delete_collection", help="Delete substitutions collections before starting (default True)", default="True", metavar="DELETE_COLLECTION")
@@ -712,9 +725,10 @@ if __name__ == "__main__":
   parser.add_option("--ids", "--recipe_ids", dest="recipe_ids", help="Either name of json file with list of ids to run on, or comma-separated list of ids.  If left blank (default) will run on everything",
 default="", metavar="RECIPE_IDS")
   parser.add_option("--nnbr", "--near_neighbors", dest="near_neighbors", help="Use near neighbors algorithm.  Default True", default="True", metavar = "NEAR_NEIGHBORS")
+  parser.add_option("--sml", "--supervisedml", dest="supervisedml", help="Use supervised ML from feedback examples.  Default True", default="True", metavar="SUPERVISEDML")
   parser.add_option("--svn", "--sim_vecname", dest="sim_vecname", help="Name of vector for recipe similarity in near-neighbor rule", default="word2vec", metavar="SIM_VEC_NAME")
-  parser.add_option("--st", "--sim_threshold", dest="sim_threshold", help="Threshold for similarity in near-neighbor rule", default="0.6", metavar="SIM_THRESHOLD")
-  parser.add_option("--mt", "--match_threshold", dest="match_threshold", help="Threshold for match in near-neighbor rule", default="0.6", metavar="MATCH_THRESHOLD")
+  parser.add_option("--st", "--sim_threshold", dest="sim_threshold", help="Threshold for similarity in near-neighbor rule, default=0.6", default="0.6", metavar="SIM_THRESHOLD")
+  parser.add_option("--mt", "--match_threshold", dest="match_threshold", help="Threshold for match in near-neighbor rule, default=0.6", default="0.6", metavar="MATCH_THRESHOLD")
   parser.add_option("--d", "--debug", dest="debug", help="Debug mode (default False)", default="False", metavar="DEBUG")
   parser.add_option("--grt", "--gram_ratio_threshold", dest="gram_ratio_threshold", help="Maximal ratio between gram values of ingredients of two recipes that is allowed for match.  Default 10.", default="10", metavar="GRAM_RATIO_THRESHOLD")
   rdb = IOTools.RecipeDB(option_parser = parser)
@@ -739,7 +753,7 @@ default="", metavar="RECIPE_IDS")
     ))
   print 'Total number of manual rules = %d' % num_rules
   #se.addRule(Word2VecRule(rdb=rdb, vecname = options.vecname, cvecname = options.cvecname, p=eval(options.min_sim)))
-
+  
   if eval(options.near_neighbors):
     se.addRule(
       NearNeighborSubstitutionRule(
@@ -749,6 +763,17 @@ default="", metavar="RECIPE_IDS")
         bigram_table_name = INGREDIENT_BIGRAM_FREQUENCY,
         gram_ratio_threshold = eval(options.gram_ratio_threshold)))
 
+  if eval(options.supervisedml):
+    se.addRule(
+      SupervisedMLRule(
+        rdb, {'taskId' : 'legacy:rice substitutions'}, ['rice', 'white rice', 'brown rice'], target = rdb.cannonicalize_entity('cauliflower'), vecname='word2vec'))
+    se.addRule(
+      SupervisedMLRule(
+        rdb, {'taskId' : 'legacy:rice substitutions'}, ['rice', 'white rice', 'brown rice'], target = rdb.cannonicalize_entity('bulgur'), vecname='word2vec'))
+    se.addRule(
+      SupervisedMLRule(
+        rdb, {'taskId' : 'legacy:rice substitutions'}, ['rice', 'white rice', 'brown rice'], target = rdb.cannonicalize_entity('quinoa'), vecname='word2vec'))
+  
 
   if eval(options.delete_collection): rdb.deleteSubstitutionsCollection()
   recipe_ids = []
