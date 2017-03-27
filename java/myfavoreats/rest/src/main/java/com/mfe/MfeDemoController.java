@@ -1,6 +1,8 @@
 package com.mfe;
 
+
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,18 +12,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.mfe.frontend.IngredientSorters;
+import javax.annotation.PostConstruct;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ScriptOperations;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.TextQuery;
+import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
+import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,14 +51,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mfe.frontend.IngredientSorters;
 import com.mfe.model.demo.DemoRecipeSearch;
 import com.mfe.model.demo.DropDownTitle;
 import com.mfe.model.demo.RecipeTitle;
@@ -53,6 +70,7 @@ import com.mfe.model.recipe.RecipePOJO;
 import com.mfe.model.recipe.RecipeSub;
 import com.mfe.model.recipe.SubstitutionResults;
 import com.mfe.model.recipe.Substitutions;
+import com.mfe.model.utils.IngredientPOJOService;
 import com.mfe.model.utils.IngredientSubstitution;
 import com.mfe.model.utils.RecipeChangeService;
 
@@ -69,6 +87,9 @@ public class MfeDemoController {
 	@Autowired
 	ImageRepository imageRepository;
 	
+	@Autowired
+	IngredientPOJOService ingredientPojoService;
+	
 	@Autowired SubstitutionsRepository substitutionsRepository;
 	
 	@Autowired
@@ -81,17 +102,20 @@ public class MfeDemoController {
 	RecipeRepository recipes;
 	
 	@Autowired
-	FileBasedIngredientPOJOService ingredientPojoService;
-
-	@Autowired
-	IngredientPOJOServiceImpl ingredientPojo;
+	MongoTemplate mongoTemplate;
 	
-	RecipeChangeService recipeChangeService;
+	
+	ScriptOperations scriptOperations;
+	
+	ExecutableMongoScript substitutionsScript;
+
+	
+	
+	 RecipeChangeService recipeChangeService;
 	
 	Log log  = LogFactory.getLog(MfeDemoController.class);
 	
 	public MfeDemoController() {
-		recipeChangeService = new RecipeChangeService(  );
 	}
 	
 
@@ -184,16 +208,18 @@ public class MfeDemoController {
 		return mongoOperations.find(query, IngredientPOJO.class);
 	}
 	
-	@RequestMapping( method=RequestMethod.GET, value= "/recipes/search/{word}")
-	public List<RecipePOJO>  searchRecipes( @PathVariable("word") String word ) {
-		String search = String.format( "{ $text : { $search : \"%s\" }}", word );
-        Query query = new BasicQuery(search);
-		List<RecipePOJO> pojos =  mongoOperations.find(query, RecipePOJO.class);
+	@RequestMapping(method = RequestMethod.GET, value = "/recipes/search/{word}")
+	public List<RecipeTitle> searchRecipes(@PathVariable("word") String word) {
+
+		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny(word);
+
+		Query query = TextQuery.queryText(criteria).sortByScore().with(new PageRequest(0, 200));
+
+		List<RecipePOJO> pojos = mongoOperations.find(query, RecipePOJO.class);
 		Set<String> ids = new HashSet<>();
 		Set<String> uniqueNames = new HashSet<>();
-		List<RecipePOJO> result = pojos.stream().
-				filter(x -> isUniqueSearchResult(x, ids, uniqueNames )).
-				collect(Collectors.toList() );
+		List<RecipeTitle> result = pojos.stream().filter(x -> isUniqueSearchResult(x, ids, uniqueNames))
+				.map(a -> new RecipeTitle(a)).collect(Collectors.toList());
 		return result;
 	}
 	
@@ -212,8 +238,6 @@ public class MfeDemoController {
 
 	@RequestMapping( method=RequestMethod.GET, value="/recipes/changed/title") 
 	public List<RecipeTitle> getChangedTitles() {
-		// not the best practice
-		recipeChangeService.setIngredientPOJOService(ingredientPojoService);
 		Set<String> unique = new HashSet<>();
 		List<RecipeTitle> titleList = new ArrayList<>();
 		titleList.add( new RecipeTitle( "57e3a75af2ca8a7bd091c3de", "Tuna Wedges", "http://www.recipetips.com/recipe-cards/t--94629/tuna-wedges-microwave-cooking.asp", "epicurious", ""));
@@ -332,7 +356,7 @@ public class MfeDemoController {
 			RecipePOJO subs = myrecipes.get(0);
 			subs.getSubs().forEach(sub -> {
 				sub.getOptions().forEach( option -> {
-					option.setIngredient(ingredientPojo.getByEntityMapping((option.getTargetId())));
+					option.setIngredient(ingredientPojoService.getByEntityMapping((option.getTargetId())));
 				});
 
 				if ("carbs".equals(sort)){
@@ -543,36 +567,44 @@ public class MfeDemoController {
 	public List<DropDownTitle> getRecipeSubstitutions() throws JsonParseException, JsonMappingException, IOException {
 		Date start  = new Date();
 		log.info( "call /recipe/substitutions");
-		/*
-		Optional<SubstitutionsList> subList = subsListRepository.findAll().stream().filter( s -> s.getList().size() > 0).findFirst();
-		if ( subList.isPresent() ) {
-			Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-		    String jsonString = gson.toJson(subList.get().getList());
-		    return  jsonString ;
-		}
-		Set<DropDownTitle> substitutionList = new HashSet<>();
-		try( Stream<Substitutions> stream = substitutionsRepository.getSubstitutionFromSystem() ) {
-			
-			stream.forEach(a -> {
-				a.getSubs().forEach( b -> processSubstitutions(a, substitutionList ));
-			});
-		}
-		HashSet<String> titles = new HashSet<>();
-		List<DropDownTitle> sortedList = substitutionList.stream().filter( a -> titles.add( a.description)).sorted().collect( Collectors.toList());
-		SubstitutionsList mysubs = new SubstitutionsList();
-		//mysubs.setList(sortedList);
-		//subsListRepository.save( mysubs );
-		Gson gson = new GsonBuilder().create();
 		
-	    String jsonString = gson.toJson(sortedList);
-	    Date end = new Date();
-	    long diff = end.getTime() - start.getTime();
-	    log.info( " /recipe/substitutions took " + diff +"ms" );
-	    return  jsonString ;
-	    */
-		ClassPathResource resource = new ClassPathResource("data/substitutionsList.json");
-		ObjectMapper mapper = new ObjectMapper();
-		return  mapper.readValue( resource.getInputStream(),  new TypeReference<List<DropDownTitle>>(){} );
+		Optional<SubstitutionsList> savedList = subsListRepository.findAll().stream()
+		.filter( x -> x.getList() != null  && x.getList().size() > 0)
+		.findFirst();
+		List<DropDownTitle> output = new ArrayList<>();
+		savedList.ifPresent(a -> output.addAll( a.getList() ));
+		
+		if ( output.size() > 0 ) return output;
+	
+		
+		output.addAll( getDropDownTitles() );
+		
+		Long elapsed = new Date().getTime() - start.getTime();
+		log.info( "call /recipe/substitutions  took " + elapsed + " ms");
+		return output;
+	}
+
+
+	/**
+	 * @return
+	 */
+	protected List<DropDownTitle> getDropDownTitles() {
+		
+		Date start = new Date();
+		log.info( "generating the dropdowntitles for the substitutions");
+		MapReduceResults<MapReduceValue> values = mongoOperations.mapReduce("substitutions"
+				,"classpath:mapfunction.js"
+				, "classpath:reducefunction.js"
+				, new MapReduceOptions().outputCollection("substitutionsListSource")
+				, MapReduceValue.class);
+		List<DropDownTitle>  titles = new ArrayList<>();
+		for( MapReduceValue v : values )  {
+			log.info( v.getDropDownTitle());
+			titles.add( v.getDropDownTitle() );
+		}
+		Long elapsed = new Date().getTime() - start.getTime();
+		log.info( "building drop down titles finshed in " + elapsed + " ms");
+		return titles;
 	}
 	
 	@RequestMapping( method=RequestMethod.GET,  value = "/recipe/substitution/{id}" )
@@ -586,6 +618,10 @@ public class MfeDemoController {
 		return substitutions;
 	}
 	
+	
+	/*
+	 *   Now using a javascript process
+	 */
 	private void processSubstitutions(Substitutions sub, Set<DropDownTitle> substitutionList) {
 		sub.getSubs().forEach(recipeSub -> substitutionList.addAll(  getSubstitutionDescriptions( recipeSub)));
 	}
@@ -605,7 +641,6 @@ public class MfeDemoController {
 		ArrayList<RecipePOJO> buffer = new ArrayList<>();
  		recipes.streamAllRecipes().forEachOrdered(pojo -> {
  			try {
- 				recipeChangeService.setIngredientPOJOService(ingredientPojoService);
 				recipeChangeService.calculateRecipeNutrition(pojo);
 				buffer.add( pojo );
 				if ( buffer.size() > 1000 ) {
@@ -622,6 +657,51 @@ public class MfeDemoController {
 		return "DONE";
 	}
 	
+	Callable<Boolean> assign = () -> {
+	//	do { Thread.sleep( 100 ); }while( ingredientPojoService == null );
+		this.recipeChangeService = new RecipeChangeService( ingredientPojoService );
+		log.info( "ingredientPojoService has been make active");
+		return true;
+	};
+
+	private ExecutableMongoScript substitutionScript;
+	
+	Callable<Boolean> createSubstitutions = () -> {
+		List<DropDownTitle> titles = getDropDownTitles();
+		ClassPathResource resource = new ClassPathResource("data/substitutionsList.js");
+		InputStreamReader sr = new InputStreamReader( resource.getInputStream() );
+		char[] cbuf = new char[  new Long(resource.contentLength()).intValue()  ];
+		sr.read(cbuf);
+		String script = new String( cbuf );
+		if ( script.length() > 0 ) {
+			log.info( "Executing mongoscript 'substitutions'");
+		}
+		else{
+			log.error( "could not load script file 'substitutionsList.js' ");
+		}
+		substitutionScript = new ExecutableMongoScript(script);
+		// Register script and call it later
+		 scriptOperations.register(new NamedMongoScript("substitutions", substitutionScript)); 
+		 scriptOperations.execute(substitutionScript, "directly execute script 'substitutions' "); 
+		 
+		
+		 SubstitutionsList currentSubs = new SubstitutionsList( titles );
+		 log.info( "Created the title drop downs and saving to database");
+		 subsListRepository.insert( currentSubs );
+		 
+		 return true;
+		};
+	
+	@PostConstruct
+	public void postConstruct() throws InterruptedException, ExecutionException, TimeoutException {
+		log.info( "calling postConstruct");
+		scriptOperations = mongoTemplate.scriptOps();
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.submit(assign);
+		ExecutorService executor2 = Executors.newSingleThreadExecutor();
+		executor2.submit(createSubstitutions);
+	    
+	}
 	
 }
 

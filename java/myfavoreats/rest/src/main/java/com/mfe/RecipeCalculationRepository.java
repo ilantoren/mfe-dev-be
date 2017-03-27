@@ -13,7 +13,7 @@ public interface RecipeCalculationRepository extends MongoRepository<RecipeSubsC
 	@Query( value ="{$and: [ {recipeId: ?0 }, {'option.targetId' : ?1 }]}")
 	public List<RecipeSubsCalculation> findByRecipeIdAndTargetId( String recipeId,  String targetId );
 	
-	@Query( value ="{'option.uid': ?1}")
+	@Query( value ="{'option.uid': ?0}")
 	public RecipeSubsCalculation findByOptionUid( String optionId );
 	
 	@Query( value ="{ recipeId: ?0  }") 

@@ -7,6 +7,8 @@ package com.mfe.model.demo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.mfe.model.recipe.RecipePOJO;
+
 import java.io.Serializable;
 
 /**
@@ -58,6 +60,10 @@ public class RecipeTitle implements Serializable {
         this.site = site;
         this.imageUrl = imageUrl;
     }
+
+	public RecipeTitle(RecipePOJO a) {
+		new RecipeTitle( a.getId(), a.getTitle(), a.getUrn(), a.getSite(), a.getPhotos() );
+	}
 
 	public String getSite() {
 		return site;

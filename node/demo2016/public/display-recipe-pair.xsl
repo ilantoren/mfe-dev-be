@@ -170,6 +170,7 @@
       	<xsl:element name="a">
       	 <xsl:attribute name = "id"><xsl:value-of select="$parentId" /></xsl:attribute>
       	  <xsl:attribute name="name" ><xsl:value-of select="targetId"/></xsl:attribute>
+      	  <xsl:attribute name="optionUid"><xsl:value-of select="optionId"/></xsl:attribute>
       	 <xsl:attribute name="href">#substitute</xsl:attribute>
       	 <xsl:attribute name="onclick">selectSubstitute(this)</xsl:attribute>
       	 <!--  xsl:value-of select="concat( fn:replace(description, '/^for /',''),  '   ' ,  '% change in carbs: ', choChange)" / -->

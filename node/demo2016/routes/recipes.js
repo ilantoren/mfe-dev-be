@@ -249,7 +249,7 @@ router.get('/recipes/with-substitute/:id', function (req, res, next) {
 		args = {
 			path : {
 				"id" : id },
-			parameters: { "target": target }
+			parameters: { "optionUid": target }
 		}
 	} else {
 		args = {

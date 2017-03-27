@@ -99,7 +99,7 @@ function updateRecipePair( link, child ) {
 }
 
 function selectSubstitute( link ) {
-	var target = escape(link.name);
+	var target = escape(link.getAttribute('optionUid'));
 	var id = link.id;
 	console.log( 'selectSubstitute  id = ' + id + ' with target =' + target);
 	var url = '/api/recipes/with-substitute/' + id + "?target=" + target;
