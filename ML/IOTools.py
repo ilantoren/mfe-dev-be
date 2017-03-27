@@ -125,7 +125,7 @@ class RecipeDB:
     DB = config_json["db"]
     mongoURL = config_json["host"] + "/" + config_json["db"]
 
-    print 'mongodb url=' + mongoURL
+    print('mongodb url=' + mongoURL)
     self.client = MongoClient(
       mongoURL,
       ssl_cert_reqs=ssl.CERT_NONE)
@@ -153,7 +153,7 @@ class RecipeDB:
     for e in cursor:
       if not "name" in e: continue
       if e["name"] == '':
-        print "Warning: empty name in entity ", e
+        print("Warning: empty name in entity ", e)
         continue
       #if "origin" in e and e["origin"] == "REMOVE": continue
       
@@ -165,7 +165,7 @@ class RecipeDB:
       if 'altName' in e and e['altName'] is not None:
         for a in e['altName']: 
           if a['alt'] == '':
-            print 'Error: empty altname for ', e
+            print('Error: empty altname for ', e)
             continue
           self.entitymap_alt_dic[a['alt']] = e["name"]
     self.bulk = self.recipe_coll.initialize_unordered_bulk_op()
@@ -198,6 +198,21 @@ class RecipeDB:
     ent_uid = int(ent['ndb_no'])
     if not ent_uid in self.ingredients_dic: return None
     return self.ingredients_dic[ent_uid]['foodGroup']
+
+  def get_random_recipe(self, with_sub=True):
+    if with_sub:
+      sub_doc = list(self.sub_coll.aggregate([{"$sample": {'size':1}}]))[0]
+      id_ = sub_doc['recipeId']
+      return self.recipe_coll.find_one({"_id" : ObjectId(id_)})
+    else:
+      return list(self.recipe_coll.aggregate( [{"$sample": {'size': 1}}]))[0]
+
+
+  def getSubByRecipeId(self, id_):   
+    cursor = self.sub_coll.find({'recipeId' : id_})
+    l = list(cursor)
+    if not l: return None
+    return l[0]
 
   def getEntityIdByCannonical(self, cannonical):
     return self.entitymap_dic[cannonical]['_id']
@@ -281,7 +296,7 @@ class RecipeDB:
       for s in r["steps"]:
         for l in s["lines"]:
           if not "cannonical" in l:
-            print "No canonical for " + l["original"]
+            print("No canonical for " + l["original"])
             no_cannonical.add(l["original"])
             continue
           ing = l["cannonical"]
@@ -465,7 +480,7 @@ class RecipeDB:
     uids = []     
     for s in r['steps']:
       if type(s) is not dict:
-        print 'Warning: recipe %s has bad "steps" form.  Skipping.' % r['_id']
+        print('Warning: recipe %s has bad "steps" form.  Skipping.' % r['_id'])
         continue
       for l in s['lines']:
         if not 'cannonical' in l: continue
@@ -496,7 +511,7 @@ class RecipeDB:
     self.rdf_coll.insert_many(map(lambda x: x.serialize(), rdfs))
 
   def readRDFs(self, origins):
-    print 'origins = ', origins
+    print('origins = ', origins)
     curs = self.rdf_coll.find({'origin': {"$in": origins}}) 
     ret = []
     for rdf_json in curs:
