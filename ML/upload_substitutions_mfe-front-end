@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mongo  ds151719-a0.mlab.com:51719/mfe-front-end  -u nailon -p andersen7 --eval "db.substitutions.drop();"
+mongodump -d myfavoreats-develop -c substitutions -o data/localdump
+mongorestore -h  ds151719-a0.mlab.com:51719 -d  mfe-front-end -c substitutions -u nailon -p andersen7 data/localdump/myfavoreats-develop/substitutions.bson
+
+
+
+

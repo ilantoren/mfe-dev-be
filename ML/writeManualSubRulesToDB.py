@@ -19,6 +19,9 @@ COOKED_LENTILS_IN_SALAD_INSTRUCTIONS = '''Put the lentils in a sieve and rinse t
 ZUCCHINI_PASTA_INSTRUCTIONS = '''1. Cut lengthwise slices from zucchini using a vegetable peeler, stopping when the seeds are reached. Turn zucchini over and continue 'peeling' until all the zucchini is in long strips; discard seeds. Slice the zucchini into thinner strips resembling spaghetti.
 2. Heat olive oil in a skillet over medium heat; cook and stir zucchini in the hot oil for 1 minute. Add water and cook until zucchini is softened, 5 to 7 minutes. Season with salt and pepper.'''
 
+CHICKPEA_FLOUR_IN_PANCAKE_NOTE = '''Equal combination chickpea flour and almong flour recommended.'''
+ALMOND_FLOUR_IN_QUICHE_INSTRUCTIONS = '''Recommended to adjust butter amount to 40 grams per cup of almond flour, and oil amount to 1/8 cup per cup of almond flour.'''
+
 parser = OptionParser()
 rdb = IOTools.RecipeDB(option_parser = parser)
 #coll = rdb.getManualSubRulesColl()
@@ -57,7 +60,7 @@ rules = [
     "infolink":"", 
     "moreinfo":"", 
     "type":"ListSinglePick",
-    "sources":resolveEntities({"linguine":{"qty":1}, "pasta":{"qty":1}, "spaghetti":{"qty":1}, "whole grain spaghetti":{"qty":1},"angel hair pasta":{"qty":1},"capellini":{"qty":1},"bucatini":{"qty":1},"perciatelli":{"qty":1},"vermicelli":{"qty":1}}),
+    "sources":resolveEntities({"linguine":{"qty":1}, "pasta":{"qty":1}, "spaghetti":{"qty":1}, "whole grain spaghetti":{"qty":1},"angel hair pasta":{"qty":1},"capellini":{"qty":1},"bucatini":{"qty":1},"perciatelli":{"qty":1},"vermicelli":{"qty":1},"spaghetti":{"qty":1}}),
     "targets":resolveEntities({"pasta":{"qty":1}, "spaghetti":{"qty":1}, "whole grain spaghetti":{"qty":1}, "angel hair pasta":{"qty":1}, "capellini":{"qty":1}, "bucatini":{"qty":1}, "perciatelli":{"qty":1}, "vermicelli":{"qty":1}, "chinese wheat noodles":{"qty":1}, "egg noodles":{"qty":1}}  )
   },
   {
@@ -169,11 +172,23 @@ rules = [
     "targets":resolveEntities({"almond flour":{"qty":1}, "almond meal":{"qty":1}})
   },
   {
+    "cond" : "recipe_tag_prob('is_cutlet') or recipe_tag_prob('is_patties')>0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Flour or breadcrumb to almond flour/almond meal for cutlet/patty",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"flour":{"qty":1}, "all purpose flour":{"qty":1}, "whole wheat flour":{"qty":1}, "breadcrumb":{"qty":1}}),
+    "targets":resolveEntities({"almond flour":{"qty":1}, "almond meal":{"qty":1}, "chickpea flour" : {"qty":1}})
+  },
+  {
     "cond" : "recipe_tag_prob('is_meatballs')>0.8 or recipe_tag_prob('is_patties')>0.8",
     "origin" : "MFE",
     "version" : "1",
     "probability" : 0.8,
-    "name" : "Breadcrumbs in meatballs to almong flour or potato flour for reduced gluten",
+    "name" : "Breadcrumbs in meatballs to almond flour or potato flour for reduced gluten",
     "infolink":"",
     "moreinfo":"",
     "type":"ListSinglePick",
@@ -181,16 +196,40 @@ rules = [
     "targets":resolveEntities({"almond flour":{"qty":1}, "potato flour":{"qty":1}})
   },
   {
-    "cond" : "recipe_tag_prob('is_meatballs')>0.8 or recipe_tag_prob('is_frittata') > 0.8 or recipe_tag_prob('is_latkes')>0.8 or recipe_tag_prob('is_pancake')>0.8",
+    "cond" : "recipe_tag_prob('is_meatballs')>0.8 or recipe_tag_prob('is_frittata') > 0.8 or recipe_tag_prob('is_latkes')>0.8",
     "origin" : "MFE",
     "version" : "1",
     "probability" : 0.8,
-    "name" : "White/all-purpose flour to almond flour in meatballs, frittata, latkes, pancake for no gluten or low carb",
+    "name" : "White/all-purpose flour to almond flour in meatballs, frittata, latkes for no gluten or low carb",
     "infolink":"",
     "moreinfo":"",
     "type":"ListSinglePick",
     "sources":resolveEntities({"white flour":{"qty":1}, "all purpose flour":{"qty":1}, "whole wheat flour":{"qty":1}}),
     "targets":resolveEntities({"almond flour":{"qty":1}})
+  },
+  {
+    "cond" : "True",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Reduce gluten by substituting lasagna sheets",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"lasagna noodle":{"qty":1}}),
+    "targets":resolveEntities({"vietnamese rice paper":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_pancake')>0.8 and recipe_has_vegetable",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "White/all-purpose flour to almond flour in vegetable pancake for no gluten or low carb",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"white flour":{"qty":1}, "all purpose flour":{"qty":1}, "whole wheat flour":{"qty":1}}),
+    "targets":resolveEntities({"almond flour":{"qty":1}, "almond meal":{"qty":1}, "gluten free flour":{"qty":1}, "chickpea flour":{"qty":1, "moreinfo":CHICKPEA_FLOUR_IN_PANCAKE_NOTE}})
   },
   {
     "cond" : "recipe_tag_prob('is_meatballs')>0.8 and (recipe_has_ingredient('quinoa') or recipe_has_ingredient('turkey'))",
@@ -214,7 +253,7 @@ rules = [
     "moreinfo":"",  # TBD by MFE
     "type":"ListSinglePick",
     "sources":resolveEntities({"white flour":{"qty":1}, "all purpose flour":{"qty":1}, "whole wheat flour":{"qty":1}}),
-    "targets":resolveEntities({"almond flour":{"qty":1}})
+    "targets":resolveEntities({"almond flour":{"qty":1.5, "moreinfo":ALMOND_FLOUR_IN_QUICHE_INSTRUCTIONS}})
   },
   {
     "cond" : "True",
@@ -305,12 +344,12 @@ rules = [
     "origin" : "MFE",
     "version" : "1",
     "probability" : 0.8,
-    "name" : "Replacing filo dough s in vegetable fritters",
+    "name" : "Replacing filo dough",
     "infolink":"http://www.livestrong.com/article/557064-how-to-bake-with-rice-paper/",
     "moreinfo":"",
     "type":"ListSinglePick",
-    "sources":resolveEntities({"filo dough":{"qty":1}}),
-    "targets":resolveEntities({"rice sheet":{"qty":1}, "rice paper":{"qty":1}})
+    "sources":resolveEntities({"phyllo pastry sheet":{"qty":1}}),
+    "targets":resolveEntities({"rice sheet":{"qty":1}, "vietnamese rice paper":{"qty":1}})
   },
   {
     "cond" : "True",
@@ -319,13 +358,13 @@ rules = [
     "probability" : 0.8,
     "name" : "Replace Kadaif noodles with rice noodles",
     "infolink":"",
-    "moreinfo":"",
+    "moreinfo":"Deep fry rice vermicelli. Optionally: Soak vermicelli in hot water for few minutes until soft and drain before frying. Tip: Use very thin (fine) rice vermicelli.",
     "type":"ListSinglePick",
     "sources":resolveEntities({"kadaif noodle":{"qty":1}}),
-    "targets":resolveEntities({"rice noodle":{"qty":1}})
+    "targets":resolveEntities({"rice noodle":{"qty":1}, "vermicelli":{"qty":1}, "soy vermicelli":{"qty":1}})
   },
   {
-    "cond" : "recipe_tag_prob('is_casserole')",
+    "cond" : "recipe_tag_prob('is_casserole')>0.8",
     "origin" : "MFE",
     "version" : "1",
     "probability" : 0.8,
@@ -333,10 +372,21 @@ rules = [
     "infolink":"",
     "moreinfo":"",
     "type":"ListSinglePick",
-    "sources":resolveEntities({"grissini":{"qty":1}}),
+    "sources":resolveEntities({"grissini":{"qty":1}, "bread stick":{"qty":1}}),
     "targets":resolveEntities({"breadcrumb":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_muffin') > 0.8 and recipe_has_vegetable",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replace flour with gluten free versions in vegetable muffins",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"white flour":{"qty":1}, "all purpose flour":{"qty":1}, "all wheat flour": {"qty":1}, "baking flour":{"qty":1}}),
+    "targets":resolveEntities({"almond flour":{"qty":1}, "gluten free flour":{"qty":1}})
   }
-
  ]
 
 

@@ -53,26 +53,27 @@ class RDFNode:
     self.name = name
     self.edges = {}
 
-  def addEdge(self, relation, neighbor):
+  def addEdge(self, relation, neighbor, transitive_close = False):
 
     add_to_set_or_create(self.edges, relation, neighbor)
 
     # in case of equivalence, perform transitive closure
     # this words because we assume (inductively) that equivalence-connected component
     # of both nodes was already processed
-    if relation == EQUIVALENT_TO:
-      component1 = self.edges[EQUIVALENT_TO] if EQUIVALENT_TO in self.edges else Set([])
-      component2 = neighbor.edges[EQUIVALENT_TO] if EQUIVALENT_TO in neighbor.edges else Set([])
-      edge_types1 = self.edges.keys()
-      edge_types2 = neighbor.edges.keys()
-      for node in component1:
-        for edge_type in edge_types2:
-          if not edge_type in node.edges:  node.edges[edge_type] = Set([])
-          node.edges[edge_type] = node.edges[edge_type] | neighbor.edges[edge_type]
-      for node in component2:
-        for edge_type in edge_types1:
-          if not edge_type in node.edges:  node.edges[edge_type] = Set([])
-          node.edges[edge_type] = node.edges[edge_type] | self.edges[edge_type]
+    if transitive_close:
+      if relation == EQUIVALENT_TO:
+        component1 = self.edges[EQUIVALENT_TO] if EQUIVALENT_TO in self.edges else Set([])
+        component2 = neighbor.edges[EQUIVALENT_TO] if EQUIVALENT_TO in neighbor.edges else Set([])
+        edge_types1 = self.edges.keys()
+        edge_types2 = neighbor.edges.keys()
+        for node in component1:
+          for edge_type in edge_types2:
+            if not edge_type in node.edges:  node.edges[edge_type] = Set([])
+            node.edges[edge_type] = node.edges[edge_type] | neighbor.edges[edge_type]
+        for  node in component2:
+          for edge_type in edge_types1:
+            if not edge_type in node.edges:  node.edges[edge_type] = Set([])
+            node.edges[edge_type] = node.edges[edge_type] | self.edges[edge_type]
        
   def getNeighbors(self, edge_type):
     if edge_type in self.edges:

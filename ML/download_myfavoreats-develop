@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mongo  myfavoreats-develop --eval "db.dropDatabase();"
+rm -rf data/dump/myfavoreats-develop/*
+mongodump -h ds145728-a0.mlab.com:45728 -d myfavoreats-develop -u nailon -p andersen7  -o data/dump/myfavoreats-develop
+mongorestore data/dump/myfavoreats-develop
+
+
+

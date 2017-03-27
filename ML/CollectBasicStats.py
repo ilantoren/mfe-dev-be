@@ -8,7 +8,6 @@ from sets import *
 import numpy as np
 import sys
 import math
-from stemming.porter2 import stem
 from optparse import OptionParser
 from bson.objectid import ObjectId
 import re
@@ -18,6 +17,7 @@ EPS=0.0001
 INFINITY = 9999999999
 
 INGREDIENT_FREQUENCY = 'ingredient_frequency'
+INGREDIENT_BIGRAM_FREQUENCY = 'ingredient_bigram_frequency'
 INGREDIENT_AV_GRAM_RATIO = 'ingredient_av_gram_ratio'
 INGREDIENT_VAR_GRAM_RATIO = 'ingredient_var_gram_ratio'
 GENERAL_WORD_FREQUENCIES_TOP5000 = 'general_word_frequencies_top5000'
@@ -52,16 +52,37 @@ def writeIngredientListStats(rdb):
   rdb.writeStats(
     name=INGREDIENT_FREQUENCY, 
     description='Frequency of (cannonical) ingredients in ingredient list', 
-    table=freqs.items()) 
+    table=freqs) 
   rdb.writeStats(
     name=INGREDIENT_AV_GRAM_RATIO,
     description='Average ratio of (cannonical) ingredients quantity in recipe, conditioned on ingredient in recipe', 
-    table=av_gram.items()) 
+    table=av_gram) 
   rdb.writeStats(
     name=INGREDIENT_VAR_GRAM_RATIO, 
     description='Variance of ratio of (cannonical) ingredients quantity in recipe, conditioned on ingredient in recipe', 
-    table=var_gram.items()) 
+    table=var_gram) 
 
+def writeIngredientListBigram(rdb):
+  freqs = {}
+  recipes = rdb.findRecipes()
+  for recipe in recipes:
+    ings = recipe.getIngs()
+    cache = Set([])
+    for i in range(len(ings)):
+      for j in range(i+1, len(ings)):
+        ing1 = ings[i]
+        ing2 = ings[j]
+        cann1 = ing1["cannonical"]
+        cann2 = ing2["cannonical"]
+        if cann1 is None or cann2 is None: continue
+        if (cann1, cann2) in cache or (cann2, cann1) in cache: continue
+        dict_count(freqs, (cann1, cann2))
+        cache.add((cann1, cann2))
+  print 'Size of bigram document ', len(freqs.__str__()), ' bytes'
+  rdb.writeStats(
+    name=INGREDIENT_BIGRAM_FREQUENCY,
+    description = 'Frequency of pairs of ingredients',
+    table=freqs)
 
 def writeGeneralWordFrequenciesTop5000(rdb, file_, denominator):
   data = open(file_, "r").read()
@@ -71,7 +92,7 @@ def writeGeneralWordFrequenciesTop5000(rdb, file_, denominator):
     data)
   indices = map(lambda x:int(x[0]), matches)
   assert indices == range(1,5001)
-  table = map(lambda x:(x[1].lower(), float(x[2])/denominator), matches)
+  table = dict(map(lambda x:(x[1].lower(), float(x[2])/denominator), matches))
   rdb.writeStats(
     name=GENERAL_WORD_FREQUENCIES_TOP5000,
     description='Frequency of top 500 words in English from general text',
@@ -137,11 +158,13 @@ if __name__ == "__main__":
 
   print "Collecting ingredient statistics..."
   writeIngredientListStats(rdb)
+  print "Collecting ingredient bigram statistics..."
+  writeIngredientListBigram(rdb)
   print "Getting word statistics from general text (from file)..."
   writeGeneralWordFrequenciesTop5000(rdb, file_=options.wff, denominator = float(options.denominator))
   print "Getting word statistics from instructions..."
-  writeInstructionAnnotationWordFrequencies(rdb)
 
+  writeIngredientListBigram(rdb)
 #  writeInstructionAnnotationWordFrequencies(rdb)
 
 

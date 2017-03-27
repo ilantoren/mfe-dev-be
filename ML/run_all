@@ -1,13 +1,21 @@
 #!/bin/bash
 
+# Usage: run_all [mongo-config-file] [id argument for SubstitutionEngine.py]
 
-python WriteWord2VecToDB.py --vecname word2vec -f data/word2vec.ing.permute.sub.out.txt
-python entityMappingToRDF.py
-python writeManualSubRulesToDB.py
-python Crawl_foodsubs.com.py 
-#python legacyFeedback.py --mongo $1
-python RecipeClassification.py
-python SubstitutionEngine.py  --ids $1
+python dropAllSubstitutionCollections.py --config $1
+python writeManualSubRulesToDB.py --config $1
+python Crawl_foodsubs.com.py --config $1
+python entityMappingToRDF.py --config $1
+python Word2VecStream.py -f data/word2vecstream.ing.permute.sub.out --substitute True --config $1
+word2vec/bin/word2vec -train data/word2vecstream.ing.permute.sub.out -output data/word2vec.ing.permute.sub.out.txt -negative 5 -cbow 1 
+python WriteWord2VecToDB.py --vecname word2vec -f data/word2vec.ing.permute.sub.out.txt --config $1
+python RecipeClassification.py --config $1
+python ComputeAndSaveRecipeVecs.py --config $1
+python CollectBasicStats.py  --config $1
+python legacyFeedback.py --config $1
+python SubstitutionEngine.py  -x True --manual_origin mfe,book --near_neighbors True  --supervisedml False --config $1 --ids $2
+
+
 
 
 

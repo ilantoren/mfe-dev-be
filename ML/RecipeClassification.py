@@ -267,6 +267,7 @@ class RecipeTagger_V1:
       return True
     return False
 
+
   def getAllTags(self):
     res = []
     if not 'title' in self.r: return res
@@ -334,10 +335,10 @@ if __name__ == "__main__":
     tags = rt.getAllTags()
     tags_json = []
     for t in tags:
-      tags_json.append({"name" : t, "probability" : "1.0", "origin" : "AlgorithmDec2016", "version" : "1.1"})
+      tags_json.append({"name" : t, "probability" : "1.0", "origin" : "AlgorithmDec2016", "version" : "1.1"}) 
     rdb.bulkUpdateOne(r["_id"], 
         {"tags" : tags_json})
-    sys.stdout.write('%d\n' %c)
+    sys.stdout.write('\r%d' %c)
     c = c + 1
   rdb.bulkFlush()
-
+  print

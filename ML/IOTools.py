@@ -12,26 +12,17 @@ from pymongo.errors import BulkWriteError
 from pymongo import UpdateOne, TEXT
 import sys
 from pprint import pprint
-from optparse import OptionParser
 from RDF import RDF, RDFGraph
 from Recipe import Recipe
 import json
 
-LOCAL_MONGO = "mongodb://127.0.0.1:27017/"
-REMOTE_MONGO = "mongodb://nailon:andersen7@ds145728-a0.mlab.com:45728/"
-GLUTENDEMO_REMOTE_MONGO = "mongodb://javademo:javademo@ds155718.mlab.com:55718/"
-GLUTENDEMO_LOCAL_MONGO = "mongodb://127.0.0.1:27017/"
-
-DEFAULT_DB = "myfavoreats-develop"
-
-LOCAL_MONGODB = "mongodb://127.0.0.1:27017/myfavoreats-develop"
-DEFAULT_MONGODB = "mongodb://nailon:andersen7@ds145728-a1.mlab.com:45728/myfavoreats-develop"
+# maximum size of chunk of table (for stats collection)
+MAX_STATS_TABLE_DOC_SIZE = 10000
 
 DEFAULT_INSTRUCTION_ANNOTATION_COLLECTION_NAME = 'instructionAnnotation'
 DEFAULT_ENTITY_MAPPING_COLLECTION_NAME = 'entityMapping'
 DEFAULT_RECIPE_COLLECTION_NAME = 'recipePOJO'
 DEFAULT_INGREDIENT_COLLECTION_NAME = 'ingredientPOJO'
-DEFAULT_ENTITY_FEATURES_COLLECTION_NAME = 'entityFeatures'
 DEFAULT_MANUAL_SUB_RULES_COLLECTION_NAME = 'manualSubRules'
 DEFAULT_SUB_COLLECTION_NAME = 'substitutions'
 DEFAULT_FEEDBACK_COLLECTION_NAME = 'feedback'
@@ -88,6 +79,12 @@ def strip_newlines(x):
   return x
 
 
+def tuple_or_identity(x):
+  try:
+    return tuple(x)
+  except:
+    return x
+
 def getTags(r):
   ret = {}
   if not 'tags' in r:
@@ -105,7 +102,6 @@ class RecipeDB:
                recipe_collection_name = DEFAULT_RECIPE_COLLECTION_NAME,
                entity_mapping_collection_name = DEFAULT_ENTITY_MAPPING_COLLECTION_NAME,
                instruction_annotation_collection_name = DEFAULT_INSTRUCTION_ANNOTATION_COLLECTION_NAME,
-               entity_features_collection_name = DEFAULT_ENTITY_FEATURES_COLLECTION_NAME,
                manual_sub_rules_collection_name = DEFAULT_MANUAL_SUB_RULES_COLLECTION_NAME,
                sub_collection_name = DEFAULT_SUB_COLLECTION_NAME,
                feedback_collection_name = DEFAULT_FEEDBACK_COLLECTION_NAME,
@@ -115,17 +111,21 @@ class RecipeDB:
                stats_collection_name = DEFAULT_STATS_COLLECTION_NAME,
                rdf_collection_name = DEFAULT_RDF_COLLECTION_NAME,
                bulk_batch=100, sub_bulk_batch=100,
-               option_parser = None):  
+               option_parser = None,
+               config_file = None):  
 
-    option_parser.add_option("--config", "--config", dest="config", help="Configure location of mongo", default="local.config")
-    (options, args) = option_parser.parse_args()
-
-    config_json = json.loads(open(options.config).read())
+    if option_parser is not None:
+      assert config_file is None
+      option_parser.add_option("--config", "--config", dest="config", help="Configure location of mongo", default="local.config")
+      (options, args) = option_parser.parse_args()
+      config_file = options.config
+      
+    config_json = json.loads(open(config_file).read())
 
     DB = config_json["db"]
     mongoURL = config_json["host"] + "/" + config_json["db"]
 
-    print 'mongodb url=' + mongoURL
+    print('mongodb url=' + mongoURL)
     self.client = MongoClient(
       mongoURL,
       ssl_cert_reqs=ssl.CERT_NONE)
@@ -133,7 +133,6 @@ class RecipeDB:
     self.db = self.client[DB]
     self.recipe_coll = self.db[recipe_collection_name]
     self.entitymap_coll = self.db[entity_mapping_collection_name]
-    self.entityfeatures_coll = self.db[entity_features_collection_name]
     self.manualSubRules_coll = self.db[manual_sub_rules_collection_name]
     self.instannot_coll = self.db[instruction_annotation_collection_name]
     self.sub_coll = self.db[sub_collection_name]
@@ -147,13 +146,14 @@ class RecipeDB:
     self.entitymap_alt_dic = {}
     self.entityvecs_dic = {}
     self.rdf_graphs = {}
+    self.recipevecs_query_cache = {}
 
     cursor = self.entitymap_coll.find({})
     i = 0
     for e in cursor:
       if not "name" in e: continue
       if e["name"] == '':
-        print "Warning: empty name in entity ", e
+        print("Warning: empty name in entity ", e)
         continue
       #if "origin" in e and e["origin"] == "REMOVE": continue
       
@@ -165,7 +165,7 @@ class RecipeDB:
       if 'altName' in e and e['altName'] is not None:
         for a in e['altName']: 
           if a['alt'] == '':
-            print 'Error: empty altname for ', e
+            print('Error: empty altname for ', e)
             continue
           self.entitymap_alt_dic[a['alt']] = e["name"]
     self.bulk = self.recipe_coll.initialize_unordered_bulk_op()
@@ -182,6 +182,40 @@ class RecipeDB:
     for ing in cursor:
       if ing['source'] in ['USDA SR28', 'SR27']:
         self.ingredients_dic[int(ing['uid'])] = ing
+
+  # Cleanup before running full substitution script
+  def dropAllSubstitutionCollections(self):
+    self.manualSubRules_coll.drop()
+    self.sub_coll.drop()
+    self.entityvecs_coll.drop()
+    self.recipevecs_coll.drop()
+    self.rdf_coll.drop()
+    self.stats_coll.drop()
+  def getEntityUSDAFamily(self, cann):
+    if not cann in self.entitymap_dic: return None
+    ent = self.entitymap_dic[cann]
+    if not 'ndb_no' in ent: return None
+    ent_uid = int(ent['ndb_no'])
+    if not ent_uid in self.ingredients_dic: return None
+    return self.ingredients_dic[ent_uid]['foodGroup']
+
+  def get_random_recipe(self, with_sub=True):
+    if with_sub:
+      sub_doc = list(self.sub_coll.aggregate([{"$sample": {'size':1}}]))[0]
+      id_ = sub_doc['recipeId']
+      return self.recipe_coll.find_one({"_id" : ObjectId(id_)})
+    else:
+      return list(self.recipe_coll.aggregate( [{"$sample": {'size': 1}}]))[0]
+
+
+  def getSubByRecipeId(self, id_):   
+    cursor = self.sub_coll.find({'recipeId' : id_})
+    l = list(cursor)
+    if not l: return None
+    return l[0]
+
+  def getEntityIdByCannonical(self, cannonical):
+    return self.entitymap_dic[cannonical]['_id']
 
   def __del__(self): 
     logging.info('Deleting RecipeDB object')
@@ -210,9 +244,10 @@ class RecipeDB:
 
   def cannonicalize_entities(self, recipe):
     for ing in recipe.ings:
-      if ing['cannonical'] is None or ing['cannonical'] == '':
-        cannonicalized = self.cannonicalize_entity(ing['food'])
-        ing['cannonical'] = cannonicalized
+      if ing['cannonical'] is None: 
+        ing['cannonical'] = self.cannonicalize_entity(ing['food'])
+        continue
+      ing['cannonical'] = self.cannonicalize_entity(ing['cannonical'])
 
   def findRecipes(self, query = {}, limit=0):
     for obj in self.recipe_coll.find(filter=query, limit=limit):
@@ -246,11 +281,6 @@ class RecipeDB:
     self.recipe_coll.update({"_id":ObjectId(id_)}, {"$set" : d}, upsert = False)
 
   def cannonicalize_entity(self, e, default=None):
-
-    # This is a hack to solve some entitymapping problems march 14, 2017 :(
-    if e == 'bulgur wheat' or e == 'bulgur': return 'bulgur'
-    if e == 'sesame seed paste' or e == 'sesame paste' or e == 'tahini': return 'tahini'
-
     if not ((e in self.entitymap_dic) or (e in self.entitymap_alt_dic)): return default
     if e in self.entitymap_alt_dic:
       return self.entitymap_alt_dic[e]
@@ -266,7 +296,7 @@ class RecipeDB:
       for s in r["steps"]:
         for l in s["lines"]:
           if not "cannonical" in l:
-            print "No canonical for " + l["original"]
+            print("No canonical for " + l["original"])
             no_cannonical.add(l["original"])
             continue
           ing = l["cannonical"]
@@ -320,6 +350,9 @@ class RecipeDB:
       logging.info("Could not perform bulk operation.")
       pprint(bwe.details)
       sys.exit(-1)
+    except:
+      # This is typicaly because the bulk buffer is empty
+      pass
       
 
   def updateOne(self, _id, post):
@@ -368,12 +401,15 @@ class RecipeDB:
   def flushRecipeVecs(self):
     self.recipevecs_coll.insert_many(self.recipe_vecs_buffer)
 
-  def readAllRecipeVecs(self, vecname):
-    cursor = self.recipevecs_coll.find({})
+  def getRecipeVecs(self, vecname, query = {}):
+    if query.__str__() in self.recipevecs_query_cache:
+      return self.recipevecs_query_cache[query.__str__()]
+    cursor = self.recipevecs_coll.find(query)
     ret = {}
     for c in cursor:
       if vecname in c:
         ret[c['recipeId'].__str__()] = c[vecname]
+    self.recipevecs_query_cache[query.__str__()] = ret
     return ret
 
   def getManualSubRulesColl(self):
@@ -411,12 +447,26 @@ class RecipeDB:
     self.sub_coll.drop()
     
   def writeStats(self, name, description, table):
-    self.stats_coll.update_one({'name': name}, {'$set': {'name':name, 'description':description, 'table':table}}, upsert=True)
+    self.stats_coll.remove({'name':name})
+    n = len(table)
+    table_items = table.items()
+    ipart = 0
+    while len(table_items):      
+      chunk_size = min(len(table_items), MAX_STATS_TABLE_DOC_SIZE)
+      part_table_items = table_items[:chunk_size]
+      table_items = table_items[chunk_size:]
+      record = {'name': name, 'part' : ipart, 'description':description, 'table': part_table_items}
+      self.stats_coll.insert_one(record)
+      ipart = ipart + 1
 
   def getStats(self, name):
-    record = self.stats_coll.find_one({'name':name})
-    if record is None: return None
-    return dict(record['table'])
+    record = self.stats_coll.find({'name':name})
+    table_items = []
+    for r in record:
+      table_items = table_items + r['table']
+    for item in table_items:
+      item[0] = tuple_or_identity(item[0])
+    return dict(table_items)
 
   # with_gram: return a pair of lists, the first is the list of ingredients, the second is the corresponding grams
   # with_uid: return a pair of lists, the first is the list of ingredients, the second is the corresponding uids
@@ -430,7 +480,7 @@ class RecipeDB:
     uids = []     
     for s in r['steps']:
       if type(s) is not dict:
-        print 'Warning: recipe %s has bad "steps" form.  Skipping.' % r['_id']
+        print('Warning: recipe %s has bad "steps" form.  Skipping.' % r['_id'])
         continue
       for l in s['lines']:
         if not 'cannonical' in l: continue
@@ -461,7 +511,7 @@ class RecipeDB:
     self.rdf_coll.insert_many(map(lambda x: x.serialize(), rdfs))
 
   def readRDFs(self, origins):
-    print 'origins = ', origins
+    print('origins = ', origins)
     curs = self.rdf_coll.find({'origin': {"$in": origins}}) 
     ret = []
     for rdf_json in curs:
