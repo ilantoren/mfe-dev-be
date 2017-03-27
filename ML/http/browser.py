@@ -157,6 +157,8 @@ def get():
   if 'formfilled' in request.args and request.args['formfilled'] != '1': 
     return(jinja2.Template(PAGE_HTML).render({}))
 
+  filter_gluten = False
+
   dont_show_sugar = True
   dont_show_salt = True
   dont_show_pepper = True
