@@ -1,0 +1,47 @@
+logging:
+  path: logs
+  level.: DEBUG
+  logging.level.: DEBUG
+
+security:
+  basic:
+    enabled: true
+  user:
+    name: demo
+    password: java
+    
+spring:
+  application:
+    name:  mfe-rest-demo 
+  data:
+    mongodb: 
+      host: localhost:27017
+      database: myfavoreats-develop
+
+#      host: ds151719-a0.mlab.com:51719
+#      database: mfe-front-end
+#      username: shlomo
+#      password: shlomo
+#mongodb://shlomo:shlomo@ds151719-a0.mlab.com:51719,ds151719-a1.mlab.com:51719/mfe-front-end?replicaSet=rs-ds151719
+    
+x      host: localhost:27017
+x     database: myfavoreats-develop
+#x     username: mfe-front
+#x     password: mfe-front
+      
+#     host: ds155718.mlab.com:55718
+#     database: java-demo
+#     username: javademo
+#     password: javademo
+      
+
+
+
+      
+      
+---
+spring:
+  profiles: cloud
+eureka:
+  instance:
+    nonSecurePort: 80
