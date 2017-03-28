@@ -8,7 +8,7 @@ FILENAME=/tmp/run_all.out.`date +%Y-%m-%dT%H:%M`
 python dropAllSubstitutionCollections.py --config $1 &> $FILENAME
 python writeManualSubRulesToDB.py --config $1 >> $FILENAME 2>&1
 python Crawl_foodsubs.com.py --config $1 >> $FILENAME 2>&1
-python entityMappingToRDF.py --config $1 >>& $FILENAME 2>&1
+python entityMappingToRDF.py --config $1 >> $FILENAME 2>&1
 python Word2VecStream.py -f data/word2vecstream.ing.permute.sub.out --substitute True --config $1 >> $FILENAME 2>&1
 word2vec/bin/word2vec -train data/word2vecstream.ing.permute.sub.out -output data/word2vec.ing.permute.sub.out.txt -negative 5 -cbow 1  >> $FILENAME 2>&1
 python WriteWord2VecToDB.py --vecname word2vec -f data/word2vec.ing.permute.sub.out.txt --config $1 >> $FILENAME 2>&1
@@ -16,7 +16,8 @@ python RecipeClassification.py --config $1 >> $FILENAME 2>&1
 python ComputeAndSaveRecipeVecs.py --config $1 >> $FILEMAME 2>&1
 python CollectBasicStats.py  --config $1 >> $FILENAME 2>&1
 python legacyFeedback.py --config $1 >> $FILENAME 2>&1
-python SubstitutionEngine.py  -x True --manual_origin mfe,book --near_neighbors True  --supervisedml False --config $1 --ids $2 --match_threshold 0.5 --sim_threshold 0.5 >> $FILENAME 2>&1
+python SubstitutionEngine.py  -x True --manual_origin mfe,book --near_neighbors True  --supervisedml False --config $1 --ids $2 --match_threshold 0.5 --sim_threshold 0.5 >>
+ $FILENAME 2>&1
 
 
 
