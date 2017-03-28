@@ -2,6 +2,7 @@
 
 # Usage: run_all [mongo-config-file] [id argument for SubstitutionEngine.py]
 
+source env/bin/activate
 export LC_ALL=C
 
 FILENAME=/tmp/run_all.out.`date +%Y-%m-%dT%H:%M`
