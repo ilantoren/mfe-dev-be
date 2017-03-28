@@ -257,7 +257,7 @@ public class MfeDemoController {
 	List<RecipeTitle>  getRecipeTitlesBySearchPhase( @PathVariable("phrase") String phrase ) {
 		
 		Date start = new Date();
-		Set<String> recipeIdSet = recipes.findBySearchPhrase("*"+phrase).map(a -> a.getId()).collect( Collectors.toSet() );
+		Set<String> recipeIdSet = recipes.findBySearchPhrase("*"+phrase,  new PageRequest(0, 100)).map(a -> a.getId()).collect( Collectors.toSet() );
 		List<RecipeTitle> result = imageRepository.findAllTitles().filter( a -> recipeIdSet.contains(a.getRecipeId()) )
 		.map(a -> new RecipeTitle( a.getRecipeId(), a.getTitle(), a.getUrl(), a.getSite(), a.getImageUrl() ) ).collect( Collectors.toList());
 		Date queryEnd = new Date();
@@ -337,6 +337,9 @@ public class MfeDemoController {
 
 				if ("carbs".equals(sort)){
 					sub.getOptions().sort(new IngredientSorters.LowCarbsCompare());
+				}
+				else if ("gluten-free".equals(sort)){
+					sub.getOptions().sort(new IngredientSorters.GlutenFree());
 				}
 
 			});
