@@ -17,8 +17,7 @@ python RecipeClassification.py --config $1 >> $FILENAME 2>&1
 python ComputeAndSaveRecipeVecs.py --config $1 >> $FILENAME 2>&1
 python CollectBasicStats.py  --config $1 >> $FILENAME 2>&1
 python legacyFeedback.py --config $1 >> $FILENAME 2>&1
-python SubstitutionEngine.py  -x True --manual_origin mfe,book --near_neighbors True  --supervisedml False --config $1 --ids $2 --match_threshold 0.5 --sim_threshold 0.5 >>
- $FILENAME 2>&1
+python SubstitutionEngine.py  -x True --manual_origin mfe,book --near_neighbors True  --supervisedml False --config $1 --ids $2 --match_threshold 0.5 --sim_threshold 0.5 >> $FILENAME 2>&1
 
 
 
