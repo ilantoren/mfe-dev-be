@@ -192,7 +192,7 @@ class RecipeTagger_V1:
     t = r['title'].lower()
     t = re.sub('salad\s+dressing', '', t)
     if re.search('sandwich', t) is not None: return False
-    if t.find('salad')>=0: return True
+    if re.search('(salad)|(tabb?o?ull?e)', t) is not None: return True
     return False
  
   def is_frittata(self):

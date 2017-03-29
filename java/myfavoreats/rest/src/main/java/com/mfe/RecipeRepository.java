@@ -50,9 +50,9 @@ public interface RecipeRepository extends MongoRepository<RecipePOJO, String> {
 	
 	@Query( value = "{ \"steps.lines.subs.description\" : ?0 }")
 	List<RecipePOJO> findRecipesBySubstitution( String description );
-	
+
 	@Query( value="{$text: {$search: ?0}}", fields = "{ title:1, site:1, urn:1}")
-	Stream<RecipePOJO> findBySearchPhrase( String phrase );
+	Stream<RecipePOJO> findBySearchPhrase( String phrase, Pageable pageable );
 
 	@Query( value="{title:{$regex: ?0}}", fields = "{ title:1, site:1, urn:1}")
 	Stream<RecipePOJO> findTitleStartsWith( String expr );

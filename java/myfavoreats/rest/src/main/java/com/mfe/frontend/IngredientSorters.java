@@ -1,5 +1,6 @@
 package com.mfe.frontend;
 
+import com.mfe.model.ingredient.Factor;
 import com.mfe.model.recipe.RecipeSub;
 import com.mfe.model.recipe.RecipeSubsOption;
 
@@ -43,6 +44,21 @@ public class IngredientSorters {
                 return -1;
             }
             return gramCompare.compare(o1.getIngredient().getCarbohydrate(),o2.getIngredient().getCarbohydrate());
+        }
+    }
+
+
+    public static class GlutenFree implements Comparator<RecipeSubsOption> {
+        @Override
+        public int compare(RecipeSubsOption o1, RecipeSubsOption o2) {
+            if (o1.getIngredient().getFactors() != null){
+                for (Factor factor : o1.getIngredient().getFactors()){
+                    if ("GLUTEN FREE".equals(factor.getValue())){
+                        return 1;
+                    }
+                }
+            }
+            return -1;
         }
     }
 }

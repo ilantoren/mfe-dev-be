@@ -192,11 +192,12 @@ class NearNeighborSubstitutionRule(AutomaticRule):
         if self.limit_sim and len(near_ids) == self.limit_sim: break
 
     if self.debug:
-      print 'Number of near recipes: ', len(near_ids)
+      print 'Number of near recipes: %d' % len(near_ids)
 
     # Another match based filter
     near_recipes = list(self.rdb.findRecipes(query={'_id' : {'$in' : map(lambda x: ObjectId(x), near_ids)}}))
     near_recipes2 = []
+
     for near_recipe in near_recipes:
       match1, match_info1 = match_recipes(recipe, near_recipe, self.rdf_graph, False, self.gram_ratio_threshold)
       match2, match_info2 = match_recipes(recipe, near_recipe, self.rdf_graph, False, self.gram_ratio_threshold)
@@ -250,6 +251,7 @@ class NearNeighborSubstitutionRule(AutomaticRule):
             moreinfo = ''))
       if not len(lsp.options): continue
       res.append(lsp.getDict())
+    if self.debug: print 'Result of nearest neighbor substitution:', res
     return res 
             
 
