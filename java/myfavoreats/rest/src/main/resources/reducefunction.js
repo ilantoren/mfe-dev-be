@@ -1,4 +1,6 @@
 var reducefunction = function( key, values) {
-	return values.pop();
+	var x = values.pop();
+	printjson(x);
+	return x;
 }
 	

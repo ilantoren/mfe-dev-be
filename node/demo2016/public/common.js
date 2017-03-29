@@ -4,11 +4,12 @@ var hostname = window.hostname;
 
 function bySubstitute( obj ) {
 	var original = 'Search for Substitutions';
-	var description = obj.name;
+	var description = obj.text;
+	var target = obj.name;
 	$('#dropdownLabel').html( description );
 	setTimeout( function() { $('#dropdownLabel').html( original ); }, 25000);
 	$.ajax({
-  url: "/api/recipes/substitute/" + description,
+  url: "/api/recipes/substitute/" + target,
   context: document.body,
   dataType: 'json' 
   }).success( function(data, status, jqXHR ) {

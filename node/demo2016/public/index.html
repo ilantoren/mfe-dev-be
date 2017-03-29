@@ -168,7 +168,7 @@
      <xsl:for-each select="/*/*">
        <li>
        <xsl:element name="a">
-           <xsl:attribute name="name"><xsl:value-of select="concat(sourceId, ',' , targetId)"/></xsl:attribute>
+           <xsl:attribute name="name"><xsl:value-of select="concat(sourceId, '_' , targetId)"/></xsl:attribute>
            <xsl:attribute name="onclick">bySubstitute(this)</xsl:attribute>
 			<xsl:value-of select="description"/>
        </xsl:element>

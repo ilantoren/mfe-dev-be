@@ -56,9 +56,13 @@ public class RecipeTitle implements Serializable {
     public RecipeTitle(String id, String title, String urn, String site, String imageUrl) {
         this.id = id;
         this.title = title;
-        this.urn = urn;
         this.site = site;
-        this.imageUrl = imageUrl;
+        
+        if (urn != null )
+        	this.urn = urn.replaceAll( "\\s", "");
+        
+        if ( imageUrl != null )
+        	this.imageUrl = imageUrl.replaceAll("\\s", "" );
     }
 
 	public RecipeTitle(RecipePOJO a) {

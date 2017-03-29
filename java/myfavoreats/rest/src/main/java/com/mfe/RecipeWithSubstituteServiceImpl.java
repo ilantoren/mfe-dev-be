@@ -136,28 +136,30 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		return optFound.isPresent();
 	}
 	private List<RecipePOJO> getCachedRecipeSubsCalculationByRecipe(RecipePOJO pojo) {
-		log.warn("getCachedRecipeSubsCalculationByRecipe off");
+		
 		ArrayList<RecipePOJO> results = new ArrayList<>();
 		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository.findByRecipeid(pojo.getId())
 				.stream().findAny();
 		calculation.ifPresent(recipeSubsCalculation -> {
-			results.addAll(useRecipeSubsCalculation(pojo, recipeSubsCalculation));
+		    List<RecipePOJO> list = getRecipeAndSubstitute( pojo, recipeSubsCalculation.getRecipeSub(), recipeSubsCalculation.getRecipeSub().getOptions().get(0) );
+			results.add(0, list.get(0));
+			results.add(1, list.get(1));
 		});
 		return results;
 	}
 
 	private List<RecipePOJO> getCachedRecipeSubsCalculation(RecipePOJO pojo, String optionId) {
-		log.warn( "getCachedRecipeSubsCalculation off");
 		
 		ArrayList<RecipePOJO> results = new ArrayList<>();
 		RecipeSubsCalculation calculation = recipeSubsCalculationRepository
 				.findByOptionUid( optionId);
 		if (  calculation != null ){
-			results.addAll(useRecipeSubsCalculation(pojo, calculation));
-			return results;
+			List<RecipePOJO> list = getRecipeAndSubstitute( pojo, calculation.getRecipeSub(), calculation.getOption() );
+			results.add(0, list.get(0));
+			results.add(1, list.get(1));
 		}
 		
-		return null;
+		return results;
 	}
 
 	/**
