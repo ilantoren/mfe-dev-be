@@ -43,7 +43,7 @@
 </distributionManagement>
 <build>
 <plugins>
-	  <plugin>
+	  <!--plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.6.1</version>
@@ -52,7 +52,7 @@
 					<XSS>1g</XSS>
 					<meminitial>1G</meminitial>
 				</configuration>
-			</plugin>
+			</plugin-->
 	  </plugins>
 <extensions>
 </extensions>
