@@ -110,12 +110,14 @@ public class RecipeSubsCalculation {
 	}
 	
 	
-	public RecipeSubsCalculation(RecipePOJO recipePojo, String substitutionId, RecipeSubsOption option) {
+	public RecipeSubsCalculation(RecipePOJO recipePojo, String substitutionId,  RecipeSubsOption option) {
+		assert( option != null );
 		this.created = new Date();
 		this.option = option;
 		this.recipeId = recipePojo.getId();
 		this.substitutionId = substitutionId;
 		this.recipeSub = null;
+		
 		if (substitutionId == null && recipePojo.getSubs().size() > 0) {
 			Logger.getLogger( getClass().getName() ).fine( "substitutionId is null: recipeId " + recipePojo.getId()   );
 			this.substitutionId = recipePojo.getSubs().get(0).getUid();
@@ -128,7 +130,6 @@ public class RecipeSubsCalculation {
 				this.description = String.format("%s for %s", s.getSource(), option.getTarget());
 			});
 		}
-
 	}
 	
 	

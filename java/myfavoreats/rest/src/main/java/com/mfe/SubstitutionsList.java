@@ -22,6 +22,11 @@ public class SubstitutionsList {
 	public SubstitutionsList() {
 		this.created = new Date();
 	}
+	
+	public SubstitutionsList( List<DropDownTitle> list ) {
+		this.created = new Date();
+		this.list = list;
+	}
 
 	public String getId() {
 		return id;

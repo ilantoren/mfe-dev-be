@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.mfe.model.ingredient.EntityMapping;
 import com.mfe.model.ingredient.IngredientPOJO;
 import com.mfe.model.ingredient.IngredientService;
 import com.mfe.model.recipe.BadParameterException;
@@ -26,6 +27,7 @@ import com.mfe.model.recipe.NutrientChange;
 import com.mfe.model.recipe.NutrientProfile;
 import com.mfe.model.recipe.RecipeChange;
 import com.mfe.model.recipe.RecipePOJO;
+import com.mfe.model.recipe.RecipeSub;
 import com.mfe.model.recipe.RecipeSubsCalculation;
 import com.mfe.model.recipe.RecipeSubsOption;
 
@@ -39,8 +41,12 @@ import java.util.logging.Logger;
 
 public class RecipeChangeService {
 	
+	public RecipeChangeService( IngredientPOJOService ingredientPOJOService ) throws Exception {
+		if ( ingredientPOJOService == null ) throw new Exception( "Requires a valid IngredientPOJOService");
+		this.ingredientPOJOService = ingredientPOJOService;
+	}
 
-	protected IngredientPOJOService ingredientPOJOService;
+	final protected IngredientPOJOService ingredientPOJOService;
 	
 	public Optional<IngredientPOJOService> getIngredientPojoService() {
 		if ( ingredientPOJOService == null) 
@@ -49,9 +55,7 @@ public class RecipeChangeService {
 			return Optional.of(ingredientPOJOService);
 	}
 	
-	public void setIngredientPOJOService( IngredientPOJOService service) {
-		ingredientPOJOService = service;
-	}
+	
 	
 	Logger log = Logger.getLogger(getClass().getName() );
 	
@@ -112,11 +116,9 @@ public class RecipeChangeService {
         }
     }
    
-    public RecipeChangeService() {}
+   
     
-    public RecipeChangeService( IngredientPOJOService ingredientService ) {
-    	this.ingredientPOJOService = ingredientService;
-    }
+   
     
     public  static RecipeChange  calculateChange( RecipePOJO pojo1,   RecipePOJO pojo2 ) throws BadParameterException, IllegalArgumentException, IllegalAccessException, IOException {
             RecipeChange changes = new RecipeChange();
@@ -241,12 +243,12 @@ public class RecipeChangeService {
          
      }
      
-     public  RecipeSubsCalculation createRecipeWithSubstitute( RecipePOJO pojo, String recipeSubstitutionId, RecipeSubsOption option ) {
-    	 if ( recipeSubstitutionId == null ) {
+     public  RecipeSubsCalculation createRecipeWithSubstitute( RecipePOJO pojo, RecipeSub recipeSubstitution, RecipeSubsOption option ) {
+    	 if ( recipeSubstitution == null ) {
     		 return null;
     	 }
     	 RecipePOJO substituteRecipe = pojo.clone();
-    	 RecipeSubsCalculation recipeSubCalculation = new RecipeSubsCalculation( pojo, recipeSubstitutionId, option );
+    	 RecipeSubsCalculation recipeSubCalculation = new RecipeSubsCalculation( pojo, recipeSubstitution.getUid(), option );
     	 // complete the substituted element
     	 
     
@@ -275,44 +277,47 @@ public class RecipeChangeService {
 	 * @param recipeSubCalculation
 	 * @param ingredientLineId
 	 */
-	public boolean changeRecipeWithSubstitution(RecipePOJO substituteRecipe, RecipeSubsCalculation recipeSubCalculation) {
+	public boolean changeRecipeWithSubstitution(RecipePOJO substituteRecipe,
+			RecipeSubsCalculation recipeSubCalculation) {
 		String ingredientLineId = recipeSubCalculation.getInstanceId();
-		if ( ingredientLineId == null ) {
-			log.warning( recipeSubCalculation.getDescription() + " has no valid instanceId ");
+		if (ingredientLineId == null) {
+			log.warning(recipeSubCalculation.getDescription() + " has no valid instanceId ");
 		}
-		Optional<Line> ingredientLine = RecipePOJO.getIngredientLines(substituteRecipe)
-    			 	.stream()
-    			 	.filter( a -> a.getUid() != null )
-    			 	.filter( a -> a.getUid().equals( ingredientLineId)).findFirst();
-                AtomicBoolean booleanObj = new AtomicBoolean(true);
-    	 ingredientLine.ifPresent(x -> {
-        	 String sourceFood = recipeSubCalculation.getSource();
-        	 String targetFood  = recipeSubCalculation.getTarget();
-        	 String targetId = recipeSubCalculation.getTargetId();
-        	 IngredientPOJO targetIngredient = ingredientPOJOService.getByEntityMapping(targetId);
-        	 if ( targetIngredient == null ) {
-        		 Logger.getLogger(getClass().getName()).warning(targetId + " does not point to a valid ingredientPOJO");
-                         booleanObj.set( false );
-        	 }
-        	 else {
-        		 String replaceNdb = targetIngredient.getUid();
-        		 if ( x.getNdb() == null ) {
-        			log.warning( x.getUid() + " " + x.getOriginal() + "  has null ndb value");
-        		 }
-        		 Logger.getLogger(getClass().getName()).info( "replacing ingredient " + x.getNdb() +  "  with " + replaceNdb );
-        		 x.setNdb( targetIngredient.getUid());
-        	 }
-        	 x.setFood(targetFood);
-        	 x.setCannonical(targetFood);
-        	 String replaceLine = x.getOriginal().replace(sourceFood, targetFood );
-        	 x.setOriginal(replaceLine);
-    	 });
-    	 
-    	 if (! ingredientLine.isPresent() ) {
-    		 Logger.getLogger(getClass().getName()).warning( ingredientLineId + " is missing ");
-                 return false;
-    	 }
-         return booleanObj.get();
+		Optional<Line> ingredientLine = RecipePOJO.getIngredientLines(substituteRecipe).stream()
+				.filter(a -> a.getUid() != null).filter(a -> a.getUid().equals(ingredientLineId)).findFirst();
+		AtomicBoolean booleanObj = new AtomicBoolean(true);
+		ingredientLine.ifPresent(x -> {
+			String sourceFood = recipeSubCalculation.getSource();
+			String targetFood = recipeSubCalculation.getTarget();
+			String targetId = recipeSubCalculation.getTargetId();
+			x.setEntityId(targetId);
+			IngredientPOJO targetIngredient = ingredientPOJOService.getByEntityMapping(targetId);
+			if (targetIngredient == null) {
+				Logger.getLogger(getClass().getName()).warning(targetId + " does not point to a valid ingredientPOJO");
+				booleanObj.set(false);
+			} else {
+				String replaceNdb = targetIngredient.getUid();
+				if (x.getNdb() == null) {
+					log.warning(x.getUid() + " " + x.getOriginal() + "  has null ndb value");
+				}
+				Logger.getLogger(getClass().getName())
+						.info("replacing ingredient " + x.getNdb() + "  with " + replaceNdb);
+				x.setNdb(targetIngredient.getUid());
+
+				x.setFood(targetFood);
+				x.setCannonical(targetFood);
+				log.info( targetFood + " at " + recipeSubCalculation.getTargetId() );
+				String replaceLine = x.getOriginal().replace(sourceFood, targetFood);
+				x.setOriginal(replaceLine);
+			}
+		});
+		
+		
+		if (!ingredientLine.isPresent()) {
+			Logger.getLogger(getClass().getName()).warning(ingredientLineId + " is missing ");
+			return false;
+		}
+		return booleanObj.get();
 	}
      
      public void calculateRecipeNutrition( RecipePOJO pojo) throws BadParameterException {
@@ -378,7 +383,7 @@ public class RecipeChangeService {
     	 pojo.getSubs().forEach(s -> { 
     		 String instanceId = s.getInstanceId();
     		Set<RecipeSubsCalculation> set =  s.getOptions().stream()
-    					.map( opt ->createRecipeWithSubstitute(pojo,s.getUid() , opt ) )
+    					.map( opt ->createRecipeWithSubstitute(pojo,s , opt ) )
     					.collect( Collectors.toSet());
     		    if ( set.isEmpty() ) {
     		    	log.severe( "substitutions " + s.getUid() + " for line" + instanceId + "  has no valid options ");
