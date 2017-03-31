@@ -80,6 +80,7 @@ def strip_newlines(x):
 
 
 def tuple_or_identity(x):
+  if type(x) == str or type(x) == unicode: return x
   try:
     return tuple(x)
   except:

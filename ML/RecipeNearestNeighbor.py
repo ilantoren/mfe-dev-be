@@ -216,7 +216,7 @@ class NearNeighborSubstitutionRule(AutomaticRule):
       if self.source_ing != '' and cann != self.source_ing: continue
       gram = myfloat(ing['gram'])
       if cann is None: 
-        print 'Warning, no cannonical for ' + ing['food']
+        print 'Warning, no cannonical for ' + clean_str(ing['food'])
         continue
 
       ing_counter = {}
