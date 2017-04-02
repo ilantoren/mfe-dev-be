@@ -388,6 +388,7 @@ public class RecipeChangeService {
          if (sumGram > 0) {
              BigDecimal scale = BigDecimal.valueOf(100d).divide(BigDecimal.valueOf(sumGram), 4, BigDecimal.ROUND_HALF_UP);
              nutrients.setGramsPerPortion(100d);
+             log.info(  "total grams: " + sumGram + "  scale by " + scale  + " for 100 grams");
              nutrients.scaleAll( scale.doubleValue());
              pojo.setNutrients(nutrients);
              pojo.setGramsPerPortion(BigDecimal.valueOf(100));

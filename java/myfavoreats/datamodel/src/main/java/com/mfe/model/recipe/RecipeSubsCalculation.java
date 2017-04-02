@@ -92,6 +92,7 @@ public class RecipeSubsCalculation {
 		return recipeSub.getSourceId();
 	}
 	public String getInstanceId() {
+		if ( recipeSub == null ) return null;
 		return recipeSub.getInstanceId();
 	}
 	public Double getProbability() {
