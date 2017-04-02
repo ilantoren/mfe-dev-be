@@ -75,7 +75,7 @@ public class NutrientProfile extends IngredientPOJO {
 
     public void scaleAll() {
         IngredientService service = new IngredientService(this);
-        service.scaleAll();
+        service.scaleAll(1D);
         if ( gramsPerPortion  < 1000) {
             BigDecimal bd = new BigDecimal(gramsPerPortion);
             gramsPerPortion = bd.setScale(0, RoundingMode.HALF_UP).doubleValue();
@@ -91,8 +91,9 @@ public class NutrientProfile extends IngredientPOJO {
     }
     
     
-    public void scaleBy( Double scale ) {
-    	
+    public void scaleAll( Double scale ) {
+    	IngredientService service = new IngredientService(this);
+    	service.scaleAll(scale);
     }
 
     public void setAll( IngredientPOJO obj, Double mult) {

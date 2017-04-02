@@ -96,6 +96,7 @@ public class IngredientService {
 	public void setAll(IngredientPOJO obj, Double mult) {
 
 		Iterator<String> it = getSet().iterator();
+		mult = ( mult == null || mult == 0) ? 1D : mult;
 
 		while (it.hasNext()) {
 			Field f = null;
@@ -122,7 +123,7 @@ public class IngredientService {
 	}
 
     private void setNutrientField(String v, String s, Double mult, Field f) {
-        setNutrientField(v, s, mult, f, false);
+        setNutrientField(v, s, mult, f, true);
     }
 
     protected void setNutrientField(String v, String s, Double mult, Field f, boolean scale) {

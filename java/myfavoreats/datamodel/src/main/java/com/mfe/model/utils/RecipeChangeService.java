@@ -94,7 +94,7 @@ public class RecipeChangeService {
        if ( value.isEmpty()) {
            return "0";
        }
-       return value.replaceAll("\\p{Alpha}$", "");
+       return value.replaceAll("\\D+$", "");
     }
 
 
@@ -388,8 +388,7 @@ public class RecipeChangeService {
          if (sumGram > 0) {
              BigDecimal scale = BigDecimal.valueOf(100d).divide(BigDecimal.valueOf(sumGram), 4, BigDecimal.ROUND_HALF_UP);
              nutrients.setGramsPerPortion(100d);
-             nutrients.scaleAll();
-             nutrients.setAll(nutrients, scale.doubleValue());
+             nutrients.scaleAll( scale.doubleValue());
              pojo.setNutrients(nutrients);
              pojo.setGramsPerPortion(BigDecimal.valueOf(100));
          }

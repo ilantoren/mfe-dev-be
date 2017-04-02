@@ -63,7 +63,7 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		
 		List<RecipePOJO> cached;
 		String id = pojo == null ? null : pojo.getId();
-		/*
+		
 		log.info( "Attempting to retrieve cached recipes substitution already calculated for recipePOJO " + id );
 		  if ( optionId.equals("NONE")) { 
 			  log.info( "no target specified: using first substitution ");
@@ -77,7 +77,7 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 			  log.info( "using cached recipe subs calculation " + pojo.getId() );
 			  return cached;
 		   }
-		   */
+		   
 		  
 		  /* processing in case where there is no cached recipe */
 		 
