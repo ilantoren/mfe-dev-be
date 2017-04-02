@@ -8,6 +8,7 @@ var mapfunction = function() {
 				var target = c.target;
 				var targetId = c.targetId;
 				var key = sourceId + "_" + targetId;
+				print( "map " + key );
 				var description = source + " for " + target;
 				var value =  {
 					"sourceId" : sourceId,

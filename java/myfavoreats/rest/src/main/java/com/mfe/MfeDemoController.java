@@ -74,6 +74,8 @@ import com.mfe.model.recipe.Substitutions;
 import com.mfe.model.utils.IngredientPOJOService;
 import com.mfe.model.utils.IngredientSubstitution;
 import com.mfe.model.utils.RecipeChangeService;
+import com.mongodb.DBCollection;
+import com.mongodb.MapReduceCommand;
 
 
 
@@ -263,7 +265,7 @@ public class MfeDemoController {
 		String sourceId = searchValues[0];
 		String targetId = searchValues[1];
 		log.info( "Searching for substitutions from " + sourceId + "  to  " +  targetId );
-		List<RecipePOJO> pojos =  findRecipesWithSubstitute( sourceId, targetId );
+		List<RecipePOJO> pojos =  findRecipesUsingSubstitute( sourceId, targetId );
 		pojos.sort( new RecipeComparator());
 		Set<String> uniqueTitle = new HashSet<>();
 		List<RecipeTitle> result = pojos.stream().
@@ -277,7 +279,7 @@ public class MfeDemoController {
 		
 	}
 	
-	private List<RecipePOJO> findRecipesWithSubstitute(String sourceId, String targetId) {
+	private List<RecipePOJO> findRecipesUsingSubstitute(String sourceId, String targetId) {
 		
 		log.debug( "findRecipesWithSubstitute  " + sourceId + "  " + targetId );
 		List<String> recipeIdList  = substitutionsRepository.findBySourceAndTarget(sourceId, targetId)
@@ -332,10 +334,10 @@ public class MfeDemoController {
 
 		return result;
 	}
-	/* to keep compatibility with the FE the old deprecated requestParam still exists but isn't used */
+	
 	@RequestMapping( method=RequestMethod.GET, value = "/recipes/with-substitute/{id}")
 	@ResponseBody
-	String getRecipeWithSubstitute( @PathVariable("id") String id, @RequestParam(value="target",required=false,  defaultValue="NONE") String targetId, @RequestParam( value="optionUid", required=false) String optionId ){
+	String getRecipeWithSubstitute( @PathVariable("id") String id, @RequestParam( value="optionUid", required=false) String optionId ){
 		Date startTime = new Date();
 		if ( optionId == null ) optionId = "NONE";
 		if ( optionId.equals("NONE")) {
@@ -637,15 +639,15 @@ public class MfeDemoController {
 		BasicQuery query = new BasicQuery("{}");
 		String substitutions  = mongoOperations.getCollectionName(Substitutions.class);
 		log.info( "starting mapReduce using " + substitutions );
-		MapReduceResults<MapReduceValue> values = mongoOperations.mapReduce( substitutions
+		DBCollection collect = mongoOperations.getCollection(substitutions);
+		MapReduceCommand mr = new MapReduceCommand(collect, mapfunction, reducefunction, "substitutionsListSource", MapReduceCommand.OutputType.MERGE,  query.getQueryObject() );
+		/*MapReduceResults<MapReduceValue> values = mongoOperations.mapReduce(query,  substitutions
 				, mapfunction
 				, reducefunction
 				, new MapReduceOptions().outputCollection("substitutionsListSource").verbose(true)
 				, MapReduceValue.class);
-		log.info( "mapReduce completed - output count: " + values.getCounts().getOutputCount());
+				*/
 		
-		values.forEach(x -> { titles.add(x.getDropDownTitle());});
-		log.info( "Generated " + titles.size() + " dropDownTitles");
 		Long elapsed = new Date().getTime() - start.getTime();
 		log.info( "building drop down titles finshed in " + elapsed + " ms");
 	}
@@ -701,6 +703,18 @@ public class MfeDemoController {
 		return "DONE";
 	}
 	
+	@RequestMapping( method=RequestMethod.GET, value="/recipe/nutrition/{id}")
+	@ResponseBody
+	public RecipePOJO calculateNutrition( @PathVariable("id") String id ) {
+		RecipePOJO  pojo = recipes.findRecipeById(id);
+		try {
+			recipeChangeService.calculateRecipeNutrition(pojo);
+		} catch (BadParameterException e) {
+				log.error( "recipe " + pojo.getId(), e);
+		}
+		return pojo;
+	}
+	
 	Callable<Boolean> assign = () -> {
 	//	do { Thread.sleep( 100 ); }while( ingredientPojoService == null );
 		this.recipeChangeService = new RecipeChangeService( ingredientPojoService );
@@ -752,6 +766,7 @@ public class MfeDemoController {
 			mapReduce(titles);
 			return true;
 	};
+	
 	
 	@PostConstruct
 	public void postConstruct() throws InterruptedException, ExecutionException, TimeoutException {

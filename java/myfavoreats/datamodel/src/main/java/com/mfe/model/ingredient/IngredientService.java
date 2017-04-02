@@ -63,8 +63,13 @@ public class IngredientService {
     public void setMc(MathContext mc) {
         this.mc = mc;
     }
-
+    
     public void scaleAll() {
+    	scaleAll( 1D);
+    }
+
+    public void scaleAll(Double mult) {
+    	if ( mult == null ) mult = Double.valueOf(1D);
         Iterator<String> it = getSet().iterator();
 
         while (it.hasNext()) {
@@ -78,7 +83,7 @@ public class IngredientService {
                 try {
                     f = IngredientPOJO.class.getDeclaredField(s);
                     v = f.get(pojo).toString();
-                    setNutrientField(v, s, 1D, f, true);
+                    setNutrientField(v, s, mult, f, false);
                 } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
                     Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -88,34 +93,33 @@ public class IngredientService {
 
     }
 
-    public void setAll(IngredientPOJO obj, Double mult) {
+	public void setAll(IngredientPOJO obj, Double mult) {
 
-        Iterator<String> it = getSet().iterator();
+		Iterator<String> it = getSet().iterator();
 
-        while (it.hasNext()) {
-            Field f = null;
-            String s = "";
-            String v = "";
-            try {
-                s = it.next();
+		while (it.hasNext()) {
+			Field f = null;
+			String s = "";
+			String v = "";
+			try {
+				s = it.next();
 
-                if (s != null) {
-                    f = IngredientPOJO.class.getDeclaredField(s);
-                }
-                v = f.get(obj).toString();
-            } catch (NoSuchFieldException e1) {
-                Logger.getAnonymousLogger().info(s + " is not a declared field " + obj.getUid
-     ());
-                continue;
-            } catch (IllegalArgumentException ex) {
-                Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            setNutrientField(v, s, mult, f);
+				if (s != null && !(s.equals( "totalGrams") || s.equals("gramsPerPortion"))) {
+					f = IngredientPOJO.class.getDeclaredField(s);
+				}
+				v = f.get(obj).toString();
+			} catch (NoSuchFieldException e1) {
+				Logger.getAnonymousLogger().info(s + " is not a declared field " + obj.getUid());
+				continue;
+			} catch (IllegalArgumentException ex) {
+				Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
+			} catch (IllegalAccessException ex) {
+				Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
+			}
+			setNutrientField(v, s, mult, f);
 
-        }
-    }
+		}
+	}
 
     private void setNutrientField(String v, String s, Double mult, Field f) {
         setNutrientField(v, s, mult, f, false);

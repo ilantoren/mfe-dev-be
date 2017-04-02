@@ -59,6 +59,10 @@ public class IngredientPOJOServiceImpl implements IngredientPOJOService {
 				return findIngredientByUid(ndb);
 			}
 		}
+		else {
+			log.warn( "entityId: " + entityId  + " does not exist");
+		}
+		log.warn( "entityId " + entityId + " has no associated ingredient " );
 		return null;
 		
 	}

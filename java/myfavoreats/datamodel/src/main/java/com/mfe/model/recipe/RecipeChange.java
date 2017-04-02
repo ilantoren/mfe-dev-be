@@ -35,30 +35,23 @@ public class RecipeChange {
     @JsonIgnore
       private Pattern removeTrailingLetters = Pattern.compile( "\\D+$");
     
-    @XmlElement
     private List<String> ingredients;
-    @XmlElement
     private Double probability;
-    @XmlElement
+    private Double servingSize;
+    private Double TotalGrams;
     private String substitutionRule;
-    @XmlElement
     private boolean lowerFat = false;
-    @XmlElement
     private boolean lowerCarb = false;
-    @XmlElement
     private boolean lowerSodium = false;
-    @XmlElement
     private boolean higherFiber = false;
-    @XmlElement
     private boolean reducedCalories = false;
-    @XmlElement
     private boolean higherProtein = false;
 
     @JacksonXmlElementWrapper(localName = "added")
-    private List<String> addedIngredients = new ArrayList();
+    private List<String> addedIngredients = new ArrayList<>();
     
     @JacksonXmlElementWrapper(localName = "reduced")
-    private List<String> reducedIngredients = new ArrayList();
+    protected List<String> reducedIngredients = new ArrayList<>();
     
     @JacksonXmlElementWrapper(localName = "carbohydrate")
     private NutrientChange carbohydrate;
@@ -255,6 +248,22 @@ public class RecipeChange {
     public void setHigherProtein(boolean higherProtein) {
         this.higherProtein = higherProtein;
     }
+
+	public Double getServingSize() {
+		return servingSize;
+	}
+
+	public void setServingSize(Double servingSize) {
+		this.servingSize = servingSize;
+	}
+
+	public Double getTotalGrams() {
+		return TotalGrams;
+	}
+
+	public void setTotalGrams(Double totalGrams) {
+		TotalGrams = totalGrams;
+	}
     
     
 }
