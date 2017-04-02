@@ -43,6 +43,8 @@ public class RecipeSubsCalculation {
 	RecipeChange recipeChange;
 	RecipeSub  recipeSub;
 	RecipeSubsOption option;
+	Line originalLine;
+	Line substitutedLine;
 	
 	public String getId() {
 		return id;
@@ -110,6 +112,18 @@ public class RecipeSubsCalculation {
 	}
 	
 	
+	public Line getOriginalLine() {
+		return originalLine;
+	}
+	public void setOriginalLine(Line originalLine) {
+		this.originalLine = originalLine;
+	}
+	public Line getSubstitutedLine() {
+		return substitutedLine;
+	}
+	public void setSubstitutedLine(Line substitutedLine) {
+		this.substitutedLine = substitutedLine;
+	}
 	public RecipeSubsCalculation(RecipePOJO recipePojo, String substitutionId,  RecipeSubsOption option) {
 		assert( option != null );
 		this.created = new Date();

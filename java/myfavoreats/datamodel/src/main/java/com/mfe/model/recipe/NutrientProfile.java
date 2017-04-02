@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.text.WordUtils;
@@ -37,9 +38,9 @@ public class NutrientProfile extends IngredientPOJO {
     
     @JsonIgnore
       public static final  String[] flds  =  new String[] { "calcium", "carbohydrate", "water" ,"lactose", "fructose", "cholesterol",
-          "protein", "satFat", "sodium", "sucrose",  "totalFat","sugars", "fiber",  "calories"};
+          "protein", "satFat", "sodium", "sucrose",  "totalFat","sugars", "fiber",  "calories" , "water"};
     @JsonIgnore
-      private Pattern removeTrailingLetters = Pattern.compile( "\\D+$");
+      private Pattern removeTrailingLetters = Pattern.compile( "([\\d|\\.]+)(\\D+)$");
     
       
       
@@ -74,7 +75,7 @@ public class NutrientProfile extends IngredientPOJO {
 
     public void scaleAll() {
         IngredientService service = new IngredientService(this);
-        service.scaleAll();
+        service.scaleAll(1D);
         if ( gramsPerPortion  < 1000) {
             BigDecimal bd = new BigDecimal(gramsPerPortion);
             gramsPerPortion = bd.setScale(0, RoundingMode.HALF_UP).doubleValue();
@@ -90,7 +91,10 @@ public class NutrientProfile extends IngredientPOJO {
     }
     
     
-
+    public void scaleAll( Double scale ) {
+    	IngredientService service = new IngredientService(this);
+    	service.scaleAll(scale);
+    }
 
     public void setAll( IngredientPOJO obj, Double mult) {
         IngredientService service = new IngredientService( this );
@@ -98,14 +102,14 @@ public class NutrientProfile extends IngredientPOJO {
             service.setAll(obj, mult);
         }
 
-        gramsPerPortion = 100 * mult;
+      //  gramsPerPortion = 100 * mult;
     }
 
     @JsonProperty
     @JacksonXmlProperty
     Double gramsPerPortion = 100D;
 
-    private void updateField(Field i) {
+    public void updateField(Field i) {
         try {
             Field f = this.getClass().getDeclaredField(i.getName());
             f.set(this, i);
@@ -147,7 +151,9 @@ public class NutrientProfile extends IngredientPOJO {
     public Double getFieldValue( String s ) {
           try {
               String strVal = getField( s );
-              String resStr = removeTrailingLetters.matcher(strVal).replaceFirst("");
+              Matcher restMatch = removeTrailingLetters.matcher(strVal);
+              if ( restMatch.find() ) {
+              String resStr = restMatch.group(1);	  
               Double val;
                if ( resStr.isEmpty()) {
                    val = Double.NaN;
@@ -156,6 +162,7 @@ public class NutrientProfile extends IngredientPOJO {
                }
                
               return val;
+              }
           } catch (NoSuchMethodException | InvocationTargetException | SecurityException | IllegalArgumentException | IllegalAccessException  ex) {
               Logger.getLogger(NutrientProfile.class.getName()).log(Level.SEVERE, null, ex);
           }
