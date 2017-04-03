@@ -26,41 +26,51 @@ class RecipeDao{
         return subCol.findOne({_id: ObjectID.createFromHexString(id)});
     }
 
-    adjustRecipeForGluten(id){
-        let That = this;
+    getSubsWithIngredients(id){
+        let that = this;
         return new Promise(function (resolve, reject) {
             if (!id){
+                log.error("no id passed");
                 reject("no id passed");
             }
-            That.getSubstitute(id).then(function(recipe){
+            that.getSubstitute(id).then(function(recipe){
+                log.info("Found recipe: " + id);
                if (!recipe){
+                   log.error("no recipe found for id" + id);
                    reject("no recipe found for id" + id);
                }
                let subs = recipe.subs;
 
                let optionIds = [];
                if (!subs || subs.length == 0){
+                   log.error("no subs for this recipe");
                    reject("no subs for this recipe");
                }
+                log.info("recipe: " + id + " has " + subs.length + " subs");
                subs.forEach(function(sub){
                    let options = sub.options;
                    if (options){
+                       log.info("sub " + sub._id + " has " + options.length + " options");
                        options.forEach(function(option){
                            optionIds.push(ObjectID.createFromHexString(option.targetId));
                        });
                    }
                });
 
-                That.getMappings(optionIds).then(function(data){
-                    if (!data){
+                that.getMappings(optionIds).then(function(data){
+                    if (!data || data.length == 0){
+                        log.error('No results from entity mapping');
                         reject('No results from entity mapping');
                     }
                     let ndb_nos = [];
+                    log.info("Found " + data.length + " mappings");
                     data.forEach(function(mapping){
                         ndb_nos.push('' + mapping.ndb_no);
                     });
 
-                    That.getIngredients(ndb_nos).then(function(ingredients){
+                    log.info("searching for " + ndb_nos.length + "ingredients");
+
+                    that.getIngredients(ndb_nos).then(function(ingredients){
                        resolve(ingredients);
                     });
                }).catch(function(err){

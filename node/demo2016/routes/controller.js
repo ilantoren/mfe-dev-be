@@ -56,11 +56,9 @@ router.get('/recipes/recipe/:id', function( req, res, next) {
 router.get('/recipes/recipe-with-subs/:id', function( req, res, next) {
     console.log( '/recipes/recipe/' + req.params );
     let id = req.params.id;
-    recipeDao.adjustRecipeForGluten(id).then(function(data){
-        res.send(data);
-    }).catch(function(err){
-        res.status(500).send(err);
-    });
+    recipeDao.getSubsWithIngredients(id)
+        .then(data   => res.send(data))
+        .catch((err) => res.status(500).send(err));
 });
 
 module.exports = router;
