@@ -1,0 +1,7 @@
+applications:
+- name: mfe-dev-be
+  memory: 512M
+  instances: 1
+  domain: mybluemix.net
+  host: mfe-dev-be
+  path: rest/target/rest-0.8.jar

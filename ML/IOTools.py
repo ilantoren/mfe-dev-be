@@ -31,6 +31,18 @@ DEFAULT_ENTITYVECS_COLLECTION_NAME = 'entityVecs'
 DEFAULT_STATS_COLLECTION_NAME = 'statsTables'
 DEFAULT_RDF_COLLECTION_NAME = 'RDF'
 
+# Avoid bad unicode characters
+def clean_str(s):
+  if s is None: return 'None'
+  good = map(lambda x: ord(x), 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -')
+  ret = ''
+  for c in s:
+    if ord(c) in good: 
+      ret = ret + c
+    else:
+      ret = ret + '?' 
+  return ret
+
 def tokenizeInstructionAnnotation(s):
   s = re.sub(r'[,;:!(\-)/\"\'*+#%$&=]', ' ', s)
   s = re.sub(r'<[a-zA-Z/]+>?', ' ', s) # this shouldnt happen, but due to parsing problems I saw it!
@@ -80,6 +92,7 @@ def strip_newlines(x):
 
 
 def tuple_or_identity(x):
+  if type(x) == str or type(x) == unicode: return x
   try:
     return tuple(x)
   except:
@@ -178,10 +191,16 @@ class RecipeDB:
       self.entityvecs_dic[self.cannonicalize_entity(e["name"])] = e
 
     self.ingredients_dic = {}
+    self.food_group_set = Set([])
     cursor = self.ingredient_coll.find({})
     for ing in cursor:
       if ing['source'] in ['USDA SR28', 'SR27']:
         self.ingredients_dic[int(ing['uid'])] = ing
+        self.food_group_set.add(ing['foodGroup'])
+
+  # Get number of foodgroups in the ingredient collection
+  def getNumFoodGroups(self):
+    return len(self.food_group_set)
 
   # Cleanup before running full substitution script
   def dropAllSubstitutionCollections(self):

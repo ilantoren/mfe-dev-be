@@ -8,11 +8,14 @@ package com.mfe.model.recipe;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.mfe.model.utils.IngredientSubstitution;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -135,7 +138,7 @@ public class Line {
     @JacksonXmlProperty
     @JsonProperty
     @JsonUnwrapped
-    private List<IngredientSubstitution> subs = new ArrayList();
+    private List<IngredientSubstitution> subs = new ArrayList<>();
 
 	private String water;
 
@@ -339,6 +342,21 @@ public class Line {
 
 	public void setEntityId(String entityId) {
 		this.entityId = entityId;
+	}
+
+	@Override
+	public Line clone() throws CloneNotSupportedException {
+		ObjectMapper m = new ObjectMapper();
+		StringWriter w = new StringWriter();
+		Line result = null;
+		try {
+			m.writeValue(w, this);
+			result = m.readValue( w.toString(), Line.class );
+		} catch (IOException e) {
+			
+			throw new CloneNotSupportedException(  e.getMessage() );
+		}
+		return result;
 	}
     
     

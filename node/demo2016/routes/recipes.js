@@ -21,13 +21,13 @@ var client = new Client();
 var host = appEnv.url;
 
 
-var service = appEnv.getService("mfe-tech-rest")
+var service = appEnv.getService("mfe-dev-be")
 
 if ( service == null) {
 	var resthost = "localhost";
 	var restport = ":8080";
 }else {
-	var resthost = "mfe-tech-rest.mybluemix.net";
+	var resthost = "mfe-dev-be.mybluemix.net";
 	var restport = ""
 }
 
@@ -249,7 +249,7 @@ router.get('/recipes/with-substitute/:id', function (req, res, next) {
 		args = {
 			path : {
 				"id" : id },
-			parameters: { "target": target }
+			parameters: { "optionUid": target }
 		}
 	} else {
 		args = {

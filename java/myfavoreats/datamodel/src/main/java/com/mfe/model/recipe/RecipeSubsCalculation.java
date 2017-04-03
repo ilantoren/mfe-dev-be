@@ -43,6 +43,8 @@ public class RecipeSubsCalculation {
 	RecipeChange recipeChange;
 	RecipeSub  recipeSub;
 	RecipeSubsOption option;
+	Line originalLine;
+	Line substitutedLine;
 	
 	public String getId() {
 		return id;
@@ -110,12 +112,26 @@ public class RecipeSubsCalculation {
 	}
 	
 	
-	public RecipeSubsCalculation(RecipePOJO recipePojo, String substitutionId, RecipeSubsOption option) {
+	public Line getOriginalLine() {
+		return originalLine;
+	}
+	public void setOriginalLine(Line originalLine) {
+		this.originalLine = originalLine;
+	}
+	public Line getSubstitutedLine() {
+		return substitutedLine;
+	}
+	public void setSubstitutedLine(Line substitutedLine) {
+		this.substitutedLine = substitutedLine;
+	}
+	public RecipeSubsCalculation(RecipePOJO recipePojo, String substitutionId,  RecipeSubsOption option) {
+		assert( option != null );
 		this.created = new Date();
 		this.option = option;
 		this.recipeId = recipePojo.getId();
 		this.substitutionId = substitutionId;
 		this.recipeSub = null;
+		
 		if (substitutionId == null && recipePojo.getSubs().size() > 0) {
 			Logger.getLogger( getClass().getName() ).fine( "substitutionId is null: recipeId " + recipePojo.getId()   );
 			this.substitutionId = recipePojo.getSubs().get(0).getUid();
@@ -128,7 +144,6 @@ public class RecipeSubsCalculation {
 				this.description = String.format("%s for %s", s.getSource(), option.getTarget());
 			});
 		}
-
 	}
 	
 	

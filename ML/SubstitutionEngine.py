@@ -778,7 +778,9 @@ default="", metavar="RECIPE_IDS")
   if eval(options.delete_collection): rdb.deleteSubstitutionsCollection()
   recipe_ids = []
   if len(options.recipe_ids):
-    if os.path.exists(options.recipe_ids):
+    if options.recipe_ids.lower() == 'all':
+      recipe_ids = []
+    elif os.path.exists(options.recipe_ids):
       recipe_ids = json.loads(file(options.recipe_ids).read())["ids"]
     else:
       recipe_ids = options.recipe_ids.split(",")

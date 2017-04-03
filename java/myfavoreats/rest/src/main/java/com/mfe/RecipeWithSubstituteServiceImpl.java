@@ -1,21 +1,21 @@
 package com.mfe;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
-import com.mfe.model.ingredient.EntityMapping;
-import com.mfe.model.ingredient.IngredientPOJO;
 import com.mfe.model.recipe.BadParameterException;
 import com.mfe.model.recipe.Line;
 import com.mfe.model.recipe.RecipePOJO;
@@ -26,6 +26,8 @@ import com.mfe.model.recipe.Substitutions;
 import com.mfe.model.utils.IngredientPOJOService;
 import com.mfe.model.utils.IngredientSubstitution;
 import com.mfe.model.utils.RecipeChangeService;
+
+
 
 @Service
 public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteService {
@@ -43,22 +45,26 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	RecipeCalculationRepository recipeSubsCalculationRepository;
 
 	@Autowired
-	FileBasedIngredientPOJOService ingredientPOJOService;
+	IngredientPOJOService ingredientPOJOService;
 
 	private RecipeChangeService recipeChangeService;
 
 	private Logger log = Logger.getLogger(RecipeWithSubstituteServiceImpl.class);
 
-	public RecipeWithSubstituteServiceImpl() {
-		this.recipeChangeService = new RecipeChangeService();
-	}
+	
 
 	@Override
+	/*  Create two recipes,  substituted recipe first then original recipe
+	 * (non-Javadoc)
+	 * @see com.mfe.RecipeWithSubstituteService#getRecipeAndSubstitute(com.mfe.model.recipe.RecipePOJO, java.lang.String)
+	 */
 	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo, String optionId) {
-		recipeChangeService.setIngredientPOJOService(ingredientPOJOService);
+		
+		
 		List<RecipePOJO> cached;
 		String id = pojo == null ? null : pojo.getId();
-		log.info( "Retrieving cached recipes substitution already calculated " + id );
+		
+		log.info( "Attempting to retrieve cached recipes substitution already calculated for recipePOJO " + id );
 		  if ( optionId.equals("NONE")) { 
 			  log.info( "no target specified: using first substitution ");
 			  cached =getCachedRecipeSubsCalculationByRecipe( pojo );
@@ -71,6 +77,9 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 			  log.info( "using cached recipe subs calculation " + pojo.getId() );
 			  return cached;
 		   }
+		   
+		  
+		  /* processing in case where there is no cached recipe */
 		 
 		String recipeId = pojo.getId();
 		Substitutions substitutions = substitutionsRepository.findByRecipeId(recipeId);
@@ -83,19 +92,20 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 			return tmp;
 		}
 		pojo.setSubs(substitutions.getSubs());
-		fillInSubsPerLine(pojo);
 		List<RecipePOJO> pojoList = new ArrayList<>();
 		
-		/*
-		 * @Todo THIS SECTION IS UNNECESSARILY COMPLEX
-		 */
+		// Look for the first Substitutions (RecipeSub) that contains an optionId matching the request optionUid
+		// if not provided then recipeSub will be Optional.empty
 		Optional<RecipeSub> recipeSub = pojo.getSubs().stream().filter(a -> subHasOptionId(a, optionId)).findFirst();
 		recipeSub.ifPresent(x -> {
-			String substitutionId = x.getUid();
+			String subId = x.getUid();
+			String lineId = x.getInstanceId();
+			String message = String.format( "Found recipeSub %s by optionId %s  affecting line uid %s", subId, optionId, lineId );
+			log.info( message );
 			Optional<RecipeSubsOption> recipeSubsOpt = x.getOptions().stream()
 					.filter(option -> option.getUid().equals(optionId)).findFirst();
 			recipeSubsOpt.ifPresent(myoption -> {
-				List<RecipePOJO> y = getRecipeAndSubstitute(pojo, substitutionId, myoption);
+				List<RecipePOJO> y = getRecipeAndSubstitute(pojo, x, myoption);
 				pojoList.addAll(y);
 			});
 		});
@@ -104,8 +114,8 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 			Optional<RecipeSub> firstSub = pojo.getSubs().stream().findFirst();
 			Optional<RecipeSubsOption> firstOption = findFirstOption(pojo);
 
-			Logger.getLogger(getClass().getName()).info("NONE was target, using:  " + firstOption.get().getTarget());
-			List<RecipePOJO> y = getRecipeAndSubstitute(pojo, firstSub.get().getUid(), firstOption.get());
+			Logger.getLogger(getClass().getName()).info("No optionId was provided, using optionId :  " + firstOption.get().getUid());
+			List<RecipePOJO> y = getRecipeAndSubstitute(pojo, firstSub.get(), firstOption.get());
 			pojoList.addAll(y);
 		}
 
@@ -133,28 +143,30 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		return optFound.isPresent();
 	}
 	private List<RecipePOJO> getCachedRecipeSubsCalculationByRecipe(RecipePOJO pojo) {
-		log.warn("getCachedRecipeSubsCalculationByRecipe off");
+		
 		ArrayList<RecipePOJO> results = new ArrayList<>();
 		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository.findByRecipeid(pojo.getId())
 				.stream().findAny();
 		calculation.ifPresent(recipeSubsCalculation -> {
-			results.addAll(useRecipeSubsCalculation(pojo, recipeSubsCalculation));
+		    List<RecipePOJO> list = getRecipeAndSubstitute( pojo, recipeSubsCalculation.getRecipeSub(), recipeSubsCalculation.getRecipeSub().getOptions().get(0) );
+			results.add(0, list.get(0));
+			results.add(1, list.get(1));
 		});
 		return results;
 	}
 
 	private List<RecipePOJO> getCachedRecipeSubsCalculation(RecipePOJO pojo, String optionId) {
-//		log.warn( "getCachedRecipeSubsCalculation off");
-//		
-//		ArrayList<RecipePOJO> results = new ArrayList<>();
-//		RecipeSubsCalculation calculation = recipeSubsCalculationRepository
-//				.findByOptionUid( optionId);
-//		if (  calculation != null ){
-//			results.addAll(useRecipeSubsCalculation(pojo, calculation));
-//			return results;
-//		}
 		
-		return null;
+		ArrayList<RecipePOJO> results = new ArrayList<>();
+		RecipeSubsCalculation calculation = recipeSubsCalculationRepository
+				.findByOptionUid( optionId);
+		if (  calculation != null ){
+			List<RecipePOJO> list = useRecipeSubsCalculation(pojo, calculation );
+			results.add(0, list.get(0));
+			results.add(1, list.get(1));
+		}
+		
+		return results;
 	}
 
 	/**
@@ -176,30 +188,32 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		return getRecipeAndSubstitute(pojo, "NONE");
 	}
 
-	@Override
-	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo, String substitutionId, RecipeSubsOption option) {
+	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo, RecipeSub substitution, RecipeSubsOption option) {
 		List<RecipePOJO> recipeList = new ArrayList<>();
+		
 		try {
-			Substitutions recipeSubs = substitutionsRepository.findByRecipeId(pojo.getId());
-			if (recipeSubs == null) {
-				log.error("No substitutions found for  recipe " + pojo.getId());
-			} else {
-				pojo.setSubs(recipeSubs.getSubs());
-				fillInSubsPerLine(pojo);
-			}
 			recipeChangeService.calculateRecipeNutrition(pojo);
-
+			
+			log.info( "fillInSubPerlLine");
+			fillInSubsPerLine(pojo);
+			log.info( "fillInSubPerlLine - completed");
 			RecipePOJO substitutedRecipe = pojo.clone();
-			RecipeSubsCalculation subCalculation = recipeChangeService.createRecipeWithSubstitute(pojo, substitutionId,
+	
+			
+			
+			RecipeSubsCalculation subCalculation = recipeChangeService.createRecipeSubCalculation(substitutedRecipe, substitution,
 					option);
 
 			if (subCalculation == null) {
 				return new ArrayList<RecipePOJO>();
 			}
+			log.info( "applying substitution and option " + subCalculation.getSubstitutionId() + " " + subCalculation.getOption().getUid() + "  to " + substitutedRecipe.getId() );
 			recipeChangeService.changeRecipeWithSubstitution(substitutedRecipe, subCalculation);
 			substitutedRecipe.setNutrients(subCalculation.getNutrients());
 			substitutedRecipe.setRecipeChange(subCalculation.getRecipeChange());
 			substitutedRecipe.setSubstitutionRule(subCalculation.getDescription());
+			substitutedRecipe.setSubs(null);   // presenting the same recipe twice one with changes and original. 
+			pojo.setSubs( null );
 			recipeList.add(substitutedRecipe);
 			recipeList.add(pojo);
 		} catch (BadParameterException e) {
@@ -209,13 +223,11 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		return recipeList;
 	}
 
-	// @Override
-	// public IngredientPOJO getById(String id) {
-	// return ingredientPojoRepository.findById( id );
-	// }
+
 
 	private void fillInSubsPerLine(RecipePOJO pojo) {
 		Map<String, Set<RecipeSubsCalculation>> subs = recipeChangeService.getAllRecipeSubstitutes(pojo);
+
 		subs.values().forEach(a -> {
 			saveSubsCalculation(a);
 		});
@@ -223,36 +235,54 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 			List<IngredientSubstitution> mysubs = new ArrayList<>();
 			Set<RecipeSubsCalculation> lineSubs = null;
 			if (subs.values() != null || subs.values().size() > 0)
-				lineSubs = subs.get(line.getUid() );
-			if (lineSubs == null || lineSubs.isEmpty() ) {
-				log.warn(pojo.getId() + "   " +  line.getUid()  + "  has no valid substitutions");
+				lineSubs = subs.get(line.getUid());
+			if (lineSubs == null || lineSubs.isEmpty()) {
+				// can happen often
+				log.debug(pojo.getId() + "   " + line.getUid() + "  has no valid substitutions");
 				// skip
 			} else {
+				// set of targets for this particular ingredient - make it TODO
+				// unique for the targetId in order to reduce clutter
+				// @todo   if more than one only show the highest probability
+				HashSet<String> targetIdSet = new HashSet<>();
 				for (RecipeSubsCalculation subCalculation : lineSubs) {
-					if( subCalculation == null || subCalculation.getTarget() == null ) {
+					if (subCalculation == null || subCalculation.getTarget() == null) {
 						continue;
 					}
-					IngredientSubstitution sub = new IngredientSubstitution(subCalculation.getTarget(),
-							subCalculation.getTargetId(), subCalculation.getOption().getUid(), subCalculation.getProbability().toString());
-					sub.setDescription(subCalculation.getDescription());
-					if ( subCalculation.getRecipeChange() == null || subCalculation.getRecipeChange().getCarbohydrate() == null ) {
-						log.warn( "carbohydrates are not set in " + subCalculation.getDescription() );
-					}
-					else {
-						sub.setChoChange(subCalculation.getRecipeChange().getCarbohydrate().getChange().toString());
-					}
-					if (  subCalculation.getRecipeChange() == null ||subCalculation.getRecipeChange().getCalories() == null) {
-						log.info("calories are not calculated in " + subCalculation.getDescription());
-					} else {
-						sub.setKcalChange(subCalculation.getRecipeChange().getCalories().getChange().toString());
-					}
+					if (targetIdSet.add(subCalculation.getTarget())) {
+						IngredientSubstitution sub = createSubCalculation(subCalculation);
 
-					mysubs.add(sub);
+						mysubs.add(sub);
+					}
 				}
 
 			}
 			line.setSubs(mysubs);
 		}
+	}
+
+	/**
+	 * @param subCalculation
+	 * @return
+	 */
+	protected IngredientSubstitution createSubCalculation(RecipeSubsCalculation subCalculation) {
+		IngredientSubstitution sub = new IngredientSubstitution(subCalculation.getTarget(),
+				subCalculation.getTargetId(), subCalculation.getOption().getUid(),
+				subCalculation.getProbability().toString());
+		sub.setDescription(subCalculation.getDescription());
+		if (subCalculation.getRecipeChange() == null
+				|| subCalculation.getRecipeChange().getCarbohydrate() == null) {
+			log.warn("carbohydrates are not set in " + subCalculation.getDescription());
+		} else {
+			sub.setChoChange(subCalculation.getRecipeChange().getCarbohydrate().getChange().toString());
+		}
+		if (subCalculation.getRecipeChange() == null
+				|| subCalculation.getRecipeChange().getCalories() == null) {
+			log.info("calories are not calculated in " + subCalculation.getDescription());
+		} else {
+			sub.setKcalChange(subCalculation.getRecipeChange().getCalories().getChange().toString());
+		}
+		return sub;
 	}
 
 	private void saveSubsCalculation(Set<RecipeSubsCalculation> a) {
@@ -265,24 +295,29 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	
 
 	@Override
+	/*
+	 * (non-Javadoc)
+	 * @see com.mfe.RecipeWithSubstituteService#getAllRecipeCalculations(com.mfe.model.recipe.RecipePOJO)
+	 */
 	public List<RecipeSubsCalculation> getAllRecipeCalculations(RecipePOJO pojo) {
+		log.error("NOT IMPLEMENTED");
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	// @Override
-	// public IngredientPOJO getByEntityMapping(String entityId) {
-	// this.recipeChangeService.setIngredientPOJOService(this);
-	//
-	// EntityMapping entity = entityMappingRepository.findById( entityId );
-	// if ( entity == null || entity.getNdb_no() == null ) {
-	// //
-	// return null;
-	// }
-	// else {
-	// String ndb = entity.getNdb_no();
-	// return ingredientPojoRepository.findById( ndb );
-	// }
-	// }
+    Callable<Boolean> task = () ->{
+    	log.info( "assigning autowire ingredientPOJOService to recipeChangeService");
+    	do {
+    		Thread.sleep( 100 );
+    	}while( ingredientPOJOService == null );
+    	this.recipeChangeService = new RecipeChangeService(ingredientPOJOService);
+		
+		return true;
+    };
+	
+	@PostConstruct
+	protected void postConstruct() {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.submit(task);
+	}
 
 }

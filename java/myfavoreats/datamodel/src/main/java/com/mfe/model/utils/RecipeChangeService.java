@@ -7,7 +7,6 @@ package com.mfe.model.utils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +15,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import com.mfe.model.ingredient.IngredientPOJO;
 import com.mfe.model.ingredient.IngredientService;
@@ -26,11 +28,10 @@ import com.mfe.model.recipe.NutrientChange;
 import com.mfe.model.recipe.NutrientProfile;
 import com.mfe.model.recipe.RecipeChange;
 import com.mfe.model.recipe.RecipePOJO;
+import com.mfe.model.recipe.RecipeSub;
 import com.mfe.model.recipe.RecipeSubsCalculation;
 import com.mfe.model.recipe.RecipeSubsOption;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -39,8 +40,13 @@ import java.util.logging.Logger;
 
 public class RecipeChangeService {
 	
+	
+	public RecipeChangeService( IngredientPOJOService ingredientPOJOService ) throws Exception {
+		if ( ingredientPOJOService == null ) throw new Exception( "Requires a valid IngredientPOJOService");
+		this.ingredientPOJOService = ingredientPOJOService;
+	}
 
-	protected IngredientPOJOService ingredientPOJOService;
+	final protected IngredientPOJOService ingredientPOJOService;
 	
 	public Optional<IngredientPOJOService> getIngredientPojoService() {
 		if ( ingredientPOJOService == null) 
@@ -49,11 +55,9 @@ public class RecipeChangeService {
 			return Optional.of(ingredientPOJOService);
 	}
 	
-	public void setIngredientPOJOService( IngredientPOJOService service) {
-		ingredientPOJOService = service;
-	}
+
 	
-	Logger log = Logger.getLogger(getClass().getName() );
+	Log log = LogFactory.getLog(getClass() );
 	
 	
     private static String getNutrientField(NutrientProfile diff, String field) {
@@ -90,7 +94,7 @@ public class RecipeChangeService {
        if ( value.isEmpty()) {
            return "0";
        }
-       return value.replaceAll("\\p{Alpha}$", "");
+       return value.replaceAll("\\D+$", "");
     }
 
 
@@ -112,11 +116,9 @@ public class RecipeChangeService {
         }
     }
    
-    public RecipeChangeService() {}
+   
     
-    public RecipeChangeService( IngredientPOJOService ingredientService ) {
-    	this.ingredientPOJOService = ingredientService;
-    }
+   
     
     public  static RecipeChange  calculateChange( RecipePOJO pojo1,   RecipePOJO pojo2 ) throws BadParameterException, IllegalArgumentException, IllegalAccessException, IOException {
             RecipeChange changes = new RecipeChange();
@@ -124,6 +126,8 @@ public class RecipeChangeService {
             changes.setSubstitutionRule(pojo2.getSubstitutionRule());
             NutrientProfile  original  = pojo1.getNutrients();
             NutrientProfile modified = pojo2.getNutrients();
+            changes.setTotalGrams( original.getTotalGrams() );
+            changes.setServingSize(100D);
             if ( original == null || modified == null ) return null;
             Set<String> modifiedIngredients = RecipePOJO.getIngredientLines(  pojo2 ).stream().map( x -> x.getFood() ).collect( Collectors.toSet());
             Set<String> originalIngredients = RecipePOJO.getIngredientLines(  pojo1 ).stream().map( x -> x.getFood() ).collect( Collectors.toSet());
@@ -241,17 +245,17 @@ public class RecipeChangeService {
          
      }
      
-     public  RecipeSubsCalculation createRecipeWithSubstitute( RecipePOJO pojo, String recipeSubstitutionId, RecipeSubsOption option ) {
-    	 if ( recipeSubstitutionId == null ) {
+     public  RecipeSubsCalculation createRecipeSubCalculation( RecipePOJO pojo, RecipeSub recipeSubstitution, RecipeSubsOption option ) {
+    	 if ( recipeSubstitution == null ) {
     		 return null;
     	 }
     	 RecipePOJO substituteRecipe = pojo.clone();
-    	 RecipeSubsCalculation recipeSubCalculation = new RecipeSubsCalculation( pojo, recipeSubstitutionId, option );
+    	 RecipeSubsCalculation recipeSubCalculation = new RecipeSubsCalculation( pojo, recipeSubstitution.getUid(), option );
     	 // complete the substituted element
     	 
     
 
-    	
+    	// Calculate both the substituteRecipe and the recipeSubCalculation reflecting the change from the original recipe
     	 changeRecipeWithSubstitution(substituteRecipe, recipeSubCalculation);
     	 
     	 Optional<IngredientPOJOService> ingredientMap = getIngredientPojoService();
@@ -259,11 +263,16 @@ public class RecipeChangeService {
     		 try {
 				calculateRecipeNutrition( pojo, map);
 	    		 calculateRecipeNutrition( substituteRecipe, map );
-	    		 recipeSubCalculation.setNutrients(substituteRecipe.getNutrients());
+	    		 NutrientProfile nutrientProfile = new NutrientProfile();
+	    		 BigDecimal mult = BigDecimal.valueOf(200D).divide( pojo.getTotalGrams().add( substituteRecipe.getTotalGrams()), 2, BigDecimal.ROUND_DOWN );
+	    		 IngredientPOJO ip = (IngredientPOJO) substituteRecipe.getNutrients();
+	    		 log.info(  "setting mult factor:" +  mult.toString());
+	    		 nutrientProfile.add( ip,mult.doubleValue() );
+	    		 recipeSubCalculation.setNutrients(nutrientProfile);
 	    		 RecipeChange recipeChange = calculateChange( pojo, substituteRecipe);
 	    		 recipeSubCalculation.setRecipeChange(recipeChange);
 			} catch (Exception e) {
-				Logger.getLogger( this.getClass().getName()).log( Level.SEVERE, "Failed in calculating recipeChange", e);
+				log.error( "Failed in calculating recipeChange", e);
 			}
     	 });
     	 
@@ -271,48 +280,61 @@ public class RecipeChangeService {
      }
 
 	/**
+	 * Take a cloned recipe prior to changing the ingredient line then change that
+	 * 		 recipe according to the recipeSubCalculation
 	 * @param substituteRecipe
 	 * @param recipeSubCalculation
 	 * @param ingredientLineId
 	 */
-	public boolean changeRecipeWithSubstitution(RecipePOJO substituteRecipe, RecipeSubsCalculation recipeSubCalculation) {
+	public boolean changeRecipeWithSubstitution(final RecipePOJO substituteRecipe,
+			final RecipeSubsCalculation recipeSubCalculation) {
 		String ingredientLineId = recipeSubCalculation.getInstanceId();
-		if ( ingredientLineId == null ) {
-			log.warning( recipeSubCalculation.getDescription() + " has no valid instanceId ");
+		if (ingredientLineId == null) {
+			log.warn(recipeSubCalculation.getDescription() + " has no valid instanceId ");
 		}
-		Optional<Line> ingredientLine = RecipePOJO.getIngredientLines(substituteRecipe)
-    			 	.stream()
-    			 	.filter( a -> a.getUid() != null )
-    			 	.filter( a -> a.getUid().equals( ingredientLineId)).findFirst();
-                AtomicBoolean booleanObj = new AtomicBoolean(true);
-    	 ingredientLine.ifPresent(x -> {
-        	 String sourceFood = recipeSubCalculation.getSource();
-        	 String targetFood  = recipeSubCalculation.getTarget();
-        	 String targetId = recipeSubCalculation.getTargetId();
-        	 IngredientPOJO targetIngredient = ingredientPOJOService.getByEntityMapping(targetId);
-        	 if ( targetIngredient == null ) {
-        		 Logger.getLogger(getClass().getName()).warning(targetId + " does not point to a valid ingredientPOJO");
-                         booleanObj.set( false );
-        	 }
-        	 else {
-        		 String replaceNdb = targetIngredient.getUid();
-        		 if ( x.getNdb() == null ) {
-        			log.warning( x.getUid() + " " + x.getOriginal() + "  has null ndb value");
-        		 }
-        		 Logger.getLogger(getClass().getName()).info( "replacing ingredient " + x.getNdb() +  "  with " + replaceNdb );
-        		 x.setNdb( targetIngredient.getUid());
-        	 }
-        	 x.setFood(targetFood);
-        	 x.setCannonical(targetFood);
-        	 String replaceLine = x.getOriginal().replace(sourceFood, targetFood );
-        	 x.setOriginal(replaceLine);
-    	 });
-    	 
-    	 if (! ingredientLine.isPresent() ) {
-    		 Logger.getLogger(getClass().getName()).warning( ingredientLineId + " is missing ");
-                 return false;
-    	 }
-         return booleanObj.get();
+		Optional<Line> ingredientLine = RecipePOJO.getIngredientLines(substituteRecipe).stream()
+				.filter(a -> a.getUid() != null).filter(a -> a.getUid().equals(ingredientLineId)).findFirst();
+		AtomicBoolean booleanObj = new AtomicBoolean(true);
+		ingredientLine.ifPresent(x -> {
+			
+   		 		try {
+					recipeSubCalculation.setOriginalLine( x.clone() );
+				} catch (CloneNotSupportedException e) {
+					log.error( "in changeRecipeWithSubstition " + substituteRecipe.getId(), e);
+				}
+			
+		
+			String sourceFood = recipeSubCalculation.getSource();
+			String targetFood = recipeSubCalculation.getTarget();
+			String targetId = recipeSubCalculation.getTargetId();
+			x.setEntityId(targetId);
+			IngredientPOJO targetIngredient = ingredientPOJOService.getByEntityMapping(targetId);
+			if (targetIngredient == null) {
+				log.warn(targetId + " does not point to a valid ingredientPOJO");
+				booleanObj.set(false);
+			} else {
+				String replaceNdb = targetIngredient.getUid();
+				if (x.getNdb() == null) {
+					log.warn(x.getUid() + " " + x.getOriginal() + "  has null ndb value");
+				}
+				log.info("replacing ingredient " + x.getNdb() + "  with " + replaceNdb);
+				x.setNdb(targetIngredient.getUid());
+
+				x.setFood(targetFood);
+				x.setCannonical(targetFood);
+				log.info( targetFood + " at " + recipeSubCalculation.getTargetId() );
+				String replaceLine = x.getOriginal().replace(sourceFood, targetFood);
+				x.setOriginal(replaceLine);
+				recipeSubCalculation.setSubstitutedLine(x);
+			}
+		});
+		
+		
+		if (!ingredientLine.isPresent()) {
+			log.warn(ingredientLineId + " is missing ");
+			return false;
+		}
+		return booleanObj.get();
 	}
      
      public void calculateRecipeNutrition( RecipePOJO pojo) throws BadParameterException {
@@ -324,7 +346,7 @@ public class RecipeChangeService {
 				calculateRecipeNutrition( pojo, service);
 				hasError.set( false );
 			} catch (BadParameterException e) {
-				Logger.getGlobal().log( Level.SEVERE, "error in call", e);
+				log.error(  "error in call", e);
 			}
     	 });
     	 if ( hasError.get() ) {
@@ -332,9 +354,10 @@ public class RecipeChangeService {
     	 }
      }
      public void calculateRecipeNutrition(RecipePOJO pojo, IngredientPOJOService ingredientPojo) throws BadParameterException {
+    	 if ( pojo == null ) throw new BadParameterException( "pojo can not be null");
          Date start = new Date();
     	 NutrientProfile nutrients = new NutrientProfile();
-         log.info( "calculating for " + pojo.getId() + ": Start timer");
+         log.info( "calculating for recipePOJO" + pojo.getId() + ": Start timer");
 
          List<Line> ingredients = (List<Line>) RecipePOJO.getIngredientLines(pojo);
          for (Line ingredient : ingredients) {
@@ -345,12 +368,11 @@ public class RecipeChangeService {
              Double mult = BigDecimal.valueOf(ingredient.getGram()).divide(BigDecimal.valueOf(100d), 6, BigDecimal.ROUND_UP).doubleValue();
              IngredientPOJO ingred = ingredientPojo.getByEntityMapping(ingredient.getEntityId() );
              if (ingred == null) {
-            	 log.warning(ingredient.getCannonical() + " of " + pojo.getId() + " : " + ingredient.getUid() + " no mapping");
+            	 log.warn("food: " + ingredient.getCannonical() + " of " + pojo.getId() + " : " + ingredient.getUid() + " no entity mapping");
                  continue;
              }
              nutrients.add(ingred, mult);
              NutrientProfile perIngredient = new NutrientProfile();
-             perIngredient.setGramsPerPortion(100D);
              perIngredient.add(ingred, mult);
              ingredient.setCalories(perIngredient.getCalories());
              ingredient.setCarbohydrates(perIngredient.getCarbohydrate());
@@ -361,11 +383,12 @@ public class RecipeChangeService {
              ingredient.setSatFat(perIngredient.getSatFat());
          }
          Double sumGram = ingredients.stream().mapToDouble(i -> i.getGram()).sum();
+         pojo.setTotalGrams(BigDecimal.valueOf(sumGram));
+         nutrients.setTotalGrams(sumGram);
          if (sumGram > 0) {
              BigDecimal scale = BigDecimal.valueOf(100d).divide(BigDecimal.valueOf(sumGram), 4, BigDecimal.ROUND_HALF_UP);
              nutrients.setGramsPerPortion(100d);
-             nutrients.scaleAll();
-             nutrients.setAll(nutrients, scale.doubleValue());
+             nutrients.scaleAll( scale.doubleValue());
              pojo.setNutrients(nutrients);
              pojo.setGramsPerPortion(BigDecimal.valueOf(100));
          }
@@ -376,12 +399,13 @@ public class RecipeChangeService {
      public Map<String,Set<RecipeSubsCalculation>> getAllRecipeSubstitutes( RecipePOJO pojo ) {
     	 Map<String,Set<RecipeSubsCalculation>> results = new HashMap<>();
     	 pojo.getSubs().forEach(s -> { 
-    		 String instanceId = s.getInstanceId();
+    		 String uid =  s.getUid();
+    		 String instanceId = s.getInstanceId();    // points to the line to in the recipe to change
     		Set<RecipeSubsCalculation> set =  s.getOptions().stream()
-    					.map( opt ->createRecipeWithSubstitute(pojo,s.getUid() , opt ) )
+    					.map( opt ->createRecipeSubCalculation(pojo,s , opt ) )
     					.collect( Collectors.toSet());
     		    if ( set.isEmpty() ) {
-    		    	log.severe( "substitutions " + s.getUid() + " for line" + instanceId + "  has no valid options ");
+    		    	log.warn( "substitutions " + uid + " for recipeId " + pojo.getId()  + "  has no valid options ");
     		    }
     		    if ( results.containsKey(instanceId)) {
     		    	Set<RecipeSubsCalculation> existing = results.get(instanceId );
