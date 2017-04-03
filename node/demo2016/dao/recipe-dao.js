@@ -68,7 +68,8 @@ class RecipeDao{
                         ndb_nos.push('' + mapping.ndb_no);
                     });
 
-                    log.info("searching for " + ndb_nos.length + "ingredients");
+                    log.info("searching for " + ndb_nos.length + " ingredients");
+                    log.dir(ndb_nos);
 
                     that.getIngredients(ndb_nos).then(function(ingredients){
                        resolve(ingredients);
