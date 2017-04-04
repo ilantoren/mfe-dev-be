@@ -71,7 +71,7 @@ class RecipeDao{
                     log.info("searching for " + ndb_nos.length + " ingredients");
                     log.dir(ndb_nos);
 
-                    that.getIngredients(ndb_nos).then(function(ingredients){
+                    that.getIngredientsByUid(ndb_nos).then(function(ingredients){
                        resolve(ingredients);
                     });
                }).catch(function(err){
@@ -86,9 +86,9 @@ class RecipeDao{
         return mapping.find({_id:{$in:ids}}).toArray();
     }
 
-    getIngredients(ids){
+    getIngredientsByUid(ids){
         let mapping = this.app.locals.db.collection("ingredientPOJO");
-        return mapping.find({_id:{$in:ids}}).toArray();
+        return mapping.find({uid:{$in:ids}}).toArray();
     }
 }
 
