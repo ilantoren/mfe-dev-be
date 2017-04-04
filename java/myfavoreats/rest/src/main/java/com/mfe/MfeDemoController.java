@@ -715,6 +715,12 @@ public class MfeDemoController {
 		return pojo;
 	}
 	
+	@RequestMapping( method=RequestMethod.GET,  value = "/substitutions/recipe/{recipeId}" )
+	@ResponseBody
+	public Substitutions findSubstitutionsByRecipeid( @PathVariable("recipeId") String recipeId ) {
+		return substitutionsRepository.findByRecipeId(recipeId);
+	}
+	
 	Callable<Boolean> assign = () -> {
 	//	do { Thread.sleep( 100 ); }while( ingredientPojoService == null );
 		this.recipeChangeService = new RecipeChangeService( ingredientPojoService );

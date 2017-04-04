@@ -189,13 +189,20 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	 * @throws BadParameterException 
 	 */
 	public List<RecipePOJO> useRecipeSubsCalculation(RecipePOJO pojo, RecipeSubsCalculation recipeSubsCalculation) throws BadParameterException {
-		log.info("Using recipeSubsCalculation "  + recipeSubsCalculation.getDescription()  +  " for " + recipeSubsCalculation.getRecipeId() );
+		String recipeId = pojo.getId();
+		log.info("Using recipeSubsCalculation for recipeId: " + recipeId + "  "  + recipeSubsCalculation.getDescription()  );
+		
 		ArrayList<RecipePOJO> results = new ArrayList<>();
 		recipeChangeService.calculateRecipeNutrition(pojo);
-		List<RecipeSub> subs = new ArrayList<>();
-		subs.add( recipeSubsCalculation.getRecipeSub() );
-		pojo.setSubs(subs);
-		fillInSubsPerLine( pojo );
+		Substitutions substitutions = substitutionsRepository.findByRecipeId(recipeId);
+		if ( substitutions == null ) {
+			log.warn( "recipeId " + recipeId + " missing substitutions");
+		}
+		else {
+			pojo.setSubs(substitutions.getSubs());
+			fillInSubsPerLine( pojo );
+		}
+		
 		RecipePOJO substituteRecipe = pojo.clone();
 		substituteRecipe.setId( pojo.getId() );
 		recipeChangeService.changeRecipeWithSubstitution(substituteRecipe, recipeSubsCalculation);
