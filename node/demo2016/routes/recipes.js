@@ -21,7 +21,7 @@ var client = new Client();
 var host = appEnv.url;
 
 
-var service = appEnv.getService("mfe-dev-be")
+var service = appEnv.getService("mfe-rest-service")
 
 if ( service == null) {
 	var resthost = "localhost";
