@@ -33,7 +33,7 @@ public class BaseRecipe  implements Cloneable {
         IngredientPOJO ingred;
         Collection<Line> list = getIngredientLines(recipe);
         int cnt = 0;
-        Double gram;
+     
         NutrientProfile accumulator = new NutrientProfile();
         for (Line line : list) {
             Double percentOfRecipe = line.getGram()/grams.doubleValue();
@@ -43,7 +43,6 @@ public class BaseRecipe  implements Cloneable {
             if (cnt == 0) {
                 accumulator.setAll(ingred, percentOfRecipe*mult);
             } else {
-                gram = line.gram == null ? 0 : line.gram;
                 ingred = map.get(line.ndb);
                 try {
                     accumulator.add(ingred, percentOfRecipe*mult);
@@ -54,7 +53,6 @@ public class BaseRecipe  implements Cloneable {
             cnt++;
         }
         accumulator.totalGrams = grams.doubleValue();
-        accumulator.scaleAll();
         recipe.setTotalGrams(BigDecimal.valueOf(100D));
         recipe.setNutrients(accumulator);
         return recipe;
@@ -63,7 +61,7 @@ public class BaseRecipe  implements Cloneable {
     public static void update(final Line ingredient, final IngredientPOJO ingred, Double mult) {
         NutrientProfile nutrients = new NutrientProfile();
         nutrients.setGramsPerPortion(mult*100d);
-        nutrients.setAll(ingred, mult);
+        nutrients.scaleAll(mult);
         ingredient.setCalories(nutrients.getCalories());
         ingredient.setCarbohydrates(nutrients.getCarbohydrate());
         ingredient.setCholesterol(nutrients.getCholesterol());
@@ -76,7 +74,7 @@ public class BaseRecipe  implements Cloneable {
    
      
    public static Collection<Line> getIngredientLines( RecipePOJO pojo ) {
-       Collection<Line>  result  = new ArrayList();
+       Collection<Line>  result  = new ArrayList<>();
        if ( pojo == null || pojo.getSteps() == null ) return result;
        pojo.getSteps().stream().forEach((step) -> {
            result.addAll(  step.getLines() );

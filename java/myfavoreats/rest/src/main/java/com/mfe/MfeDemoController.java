@@ -356,10 +356,10 @@ public class MfeDemoController {
 				log.warn( "No results were obtained from the recipeSubstitutionService " + id );
 			}
 			else {
-			RecipePOJO childRecipe = myrecipes.get(0);
-			RecipeChange rc = childRecipe.getRecipeChange();
+			RecipePOJO recipePojo = myrecipes.get(0);
+			RecipeChange rc = recipePojo.getRecipeChange();
 			RecipeChangeService.prepareForDisplay(rc);
-			childRecipe.setRecipeChange(rc);
+			recipePojo.setRecipeChange(rc);
 			XmlMapper map = new XmlMapper();
 			ObjectWriter ow = map.writer();
 			return serializeResult(ow, myrecipes);
@@ -640,7 +640,7 @@ public class MfeDemoController {
 		String substitutions  = mongoOperations.getCollectionName(Substitutions.class);
 		log.info( "starting mapReduce using " + substitutions );
 		DBCollection collect = mongoOperations.getCollection(substitutions);
-		MapReduceCommand mr = new MapReduceCommand(collect, mapfunction, reducefunction, "substitutionsListSource", MapReduceCommand.OutputType.MERGE,  query.getQueryObject() );
+		MapReduceCommand mr = new MapReduceCommand(collect, mapfunction, reducefunction, "substitutionsListSource", MapReduceCommand.OutputType.REPLACE,  query.getQueryObject() );
 		/*MapReduceResults<MapReduceValue> values = mongoOperations.mapReduce(query,  substitutions
 				, mapfunction
 				, reducefunction

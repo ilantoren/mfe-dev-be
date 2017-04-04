@@ -31,6 +31,8 @@ public class RecipeSubsCalculation {
 	public void setSubstitutionId(String substitutionId) {
 		this.substitutionId = substitutionId;
 	}
+	
+	
 
 
 	@Id
@@ -125,16 +127,22 @@ public class RecipeSubsCalculation {
 	public void setSubstitutedLine(Line substitutedLine) {
 		this.substitutedLine = substitutedLine;
 	}
-	public RecipeSubsCalculation(RecipePOJO recipePojo, String substitutionId,  RecipeSubsOption option) {
-		assert( option != null );
+	public RecipeSubsCalculation(RecipePOJO recipePojo, String substitutionId,  RecipeSubsOption option) throws BadParameterException  {
+		final String recipeId = recipePojo.getId();
+		String message = String.format("recipeId %s -  substitution uid %s  and option uid  "
+				, recipeId
+				, substitutionId
+				, option.getUid() );
+		Logger.getLogger(getClass().getName()).info(message);
+		assert( recipePojo != null && substitutionId != null && option != null );
 		this.created = new Date();
 		this.option = option;
-		this.recipeId = recipePojo.getId();
+		this.recipeId = recipeId;
 		this.substitutionId = substitutionId;
 		this.recipeSub = null;
 		
 		if (substitutionId == null && recipePojo.getSubs().size() > 0) {
-			Logger.getLogger( getClass().getName() ).fine( "substitutionId is null: recipeId " + recipePojo.getId()   );
+			Logger.getLogger( getClass().getName() ).fine( "substitutionId is null: recipeId " + recipeId   );
 			this.substitutionId = recipePojo.getSubs().get(0).getUid();
 		}
 		if (this.substitutionId != null) {
@@ -145,6 +153,7 @@ public class RecipeSubsCalculation {
 				this.description = String.format("%s for %s", s.getSource(), option.getTarget());
 			});
 		}
+		if (recipeSub == null ) throw new BadParameterException( "there is no matching substitution to use ");
 	}
 	
 	

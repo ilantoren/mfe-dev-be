@@ -83,7 +83,7 @@ public class IngredientService {
                 try {
                     f = IngredientPOJO.class.getDeclaredField(s);
                     v = f.get(pojo).toString();
-                    setNutrientField(v, s, mult, f, false);
+                    setNutrientField(v, s, mult, f, true);
                 } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
                     Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -117,14 +117,12 @@ public class IngredientService {
 			} catch (IllegalAccessException ex) {
 				Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
 			}
-			setNutrientField(v, s, mult, f);
+			setNutrientField(v, s, mult, f, true);
 
 		}
 	}
 
-    private void setNutrientField(String v, String s, Double mult, Field f) {
-        setNutrientField(v, s, mult, f, true);
-    }
+   
 
     protected void setNutrientField(String v, String s, Double mult, Field f, boolean scale) {
         StringBuilder sb = new StringBuilder();

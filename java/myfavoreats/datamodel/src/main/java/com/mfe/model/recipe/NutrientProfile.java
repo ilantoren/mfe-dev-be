@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.text.WordUtils;
+import org.springframework.data.annotation.Transient;
 
 /**
  *
@@ -38,11 +39,12 @@ public class NutrientProfile extends IngredientPOJO {
     
     @JsonIgnore
       public static final  String[] flds  =  new String[] { "calcium", "carbohydrate", "water" ,"lactose", "fructose", "cholesterol",
-          "protein", "satFat", "sodium", "sucrose",  "totalFat","sugars", "fiber",  "calories" , "water"};
+          "protein", "satFat", "sodium", "sucrose",  "totalFat","sugars", "fiber",  "calories" , "water", "ref"};
     @JsonIgnore
       private Pattern removeTrailingLetters = Pattern.compile( "([\\d|\\.]+)(\\D+)$");
     
-      
+
+      private Double ref;
       
       public NutrientProfile() {}
     
@@ -56,6 +58,7 @@ public class NutrientProfile extends IngredientPOJO {
     }
 
     public void setTotalGrams(Double totalGrams) {
+    	this.ref = totalGrams;
         this.totalGrams = totalGrams;
     }
 
@@ -101,8 +104,6 @@ public class NutrientProfile extends IngredientPOJO {
         if (obj != null &&  obj.getUid() !=null &&  !obj.getUid().equals("0")) {
             service.setAll(obj, mult);
         }
-
-      //  gramsPerPortion = 100 * mult;
     }
 
     @JsonProperty
@@ -123,6 +124,10 @@ public class NutrientProfile extends IngredientPOJO {
             sb.append( WordUtils.capitalize(s) ).append(",");
         }
         return sb.toString();
+    }
+    
+    public Double getRef() {
+    	return ref;
     }
 
     @Override
