@@ -1,7 +1,7 @@
 logging:
   path: logs
-  level.: DEBUG
-  logging.level.: DEBUG
+  level.: INFO
+  logging.level.: INFO
 
 security:
   basic:
