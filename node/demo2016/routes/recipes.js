@@ -277,7 +277,7 @@ router.get('/recipes/with-substitute/:id', function (req, res, next) {
 	}
     console.log( args );
     console.log( "/recipes/with-substitute/: " + id + " target is " + target);
-    var regexp = new RegExp(/>(\d|\.)+\s?[gm|kcal]+</g);
+    var regexp = new RegExp(/>([\d|\.]+)\s?[gm|kcal]+</g);
     client.methods.recipeWithSubstitute( args, function( data, response ) {
     		if ( data) {
     			console.log( "Request for " + id + " succeeded");
