@@ -1,8 +1,9 @@
+"use strict";
 var express = require('express');
 var router = express.Router();
 var mappedEntityDao = require('../dao/mapped-entity-dao');
 var recipeDao = require('../dao/recipe-dao');
-ObjectID = require('mongodb').ObjectID;
+var ObjectID = require('mongodb').ObjectID;
 
 router.get('/ingredients/search/:text', function( req, res, next) {
     console.log( '/ingredients/search/' + req.params );
