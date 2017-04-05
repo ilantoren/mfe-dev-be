@@ -29,8 +29,10 @@ var app = express();
 
 var mappedEntityDao = require('./dao/mapped-entity-dao');
 var recipeDao = require('./dao/recipe-dao');
+var rulesDao = require('./dao/rules-dao');
 mappedEntityDao.app = app;
 recipeDao.app = app;
+rulesDao.app = app;
 
 
 var mongoCon = require('mongodb').MongoClient;

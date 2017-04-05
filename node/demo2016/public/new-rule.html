@@ -1,0 +1,39 @@
+<!--<div style="width:50%">-->
+<div>
+<div class="form-group">
+    <label for="origin">Origin:</label>
+    <input type="text" class="form-control" id="origin" ng-model="rule.origin" style="width:380px;">
+
+    <label for="condition">Condition (rule):</label>
+    <input type="text" class="form-control" id="condition" ng-model="rule.cond" style="width:380px;">
+
+    <label for="probability">Probability:</label>
+    <input type="text" class="form-control" id="probability" ng-model="rule.probability" style="width:80px;">
+</div>
+
+<div class="row" style="padding-top: 10px;">
+    <div class="col-sm-3">
+        <button type="button" class="btn btn-default btn-sm" ng-click="addSource()">Add Source</button>
+        <div>
+            <div ag-grid="sourcesGridOptions" class="ag-fresh" style="height: 400px; width:500px;"/>
+        </div>
+    </div>
+
+
+<div class="col-sm-3">
+    <button type="button" class="btn btn-default btn-sm" ng-click="addTarget()">Add Target</button>
+    <div>
+        <div ag-grid="targetGridOptions" class="ag-fresh" style="height: 400px; width:500px;"/>
+    </div>
+</div>
+</div>
+<!--</div>-->
+<!--</div>-->
+
+<div class="row" style="padding-top: 10px;">
+    <div class="col-sm-1">
+        <button type="button" class="btn btn-default btn-sm" ng-click="save()">Save</button>
+        <button type="button" class="btn btn-default btn-sm" ng-click="back()">Back</button>
+    </div>
+</div>
+</div>

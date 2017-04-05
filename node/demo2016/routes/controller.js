@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var mappedEntityDao = require('../dao/mapped-entity-dao');
 var recipeDao = require('../dao/recipe-dao');
+var rulesDao = require('../dao/rules-dao');
 ObjectID = require('mongodb').ObjectID;
 
 router.get('/ingredients/search/:text', function( req, res, next) {
@@ -57,6 +58,22 @@ router.get('/recipes/recipe-with-subs/:id', function( req, res, next) {
     console.log( '/recipes/recipe/' + req.params );
     let id = req.params.id;
     recipeDao.getSubsWithIngredients(id)
+        .then(data   => res.send(data))
+        .catch((err) => res.status(500).send(err));
+});
+
+
+router.get('/rules', function( req, res, next) {
+    console.log( '/rules');
+    rulesDao.getAllRules()
+        .then(data   => res.send(data))
+        .catch((err) => res.status(500).send(err));
+});
+
+router.get('/rules/:id', function( req, res, next) {
+    console.log( '/rule/' +  req.params);
+    let id = req.params.id;
+    rulesDao.getRule(id)
         .then(data   => res.send(data))
         .catch((err) => res.status(500).send(err));
 });
