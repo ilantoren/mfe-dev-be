@@ -51,7 +51,7 @@ public class IngredientService {
         String[] useFields = {"energy", "adj_protein", "alcohol", "caffeine", "calcium", "carbohydrate", "cholesterol",
             "fiber", "glucose", "iron", "lactose", "magnesium", "monoFat", "polyFat", "protein", "satFat",
             "sodium", "sucrose", "sugars", "theobromine", "transFat", "vitA", "vitC", "vitD", "totalFat", "calories", "starch", "water"};
-        Set<String> set = new HashSet();
+        Set<String> set = new HashSet<>();
         set.addAll(Arrays.asList(useFields));
         return set;
     }
@@ -93,6 +93,7 @@ public class IngredientService {
 
     }
 
+    @Deprecated
 	public void setAll(IngredientPOJO obj, Double mult) {
 
 		Iterator<String> it = getSet().iterator();
@@ -266,7 +267,7 @@ public class IngredientService {
     public static  NutrientProfile cloneOld( NutrientProfile orig ) throws IllegalArgumentException, IllegalAccessException {
            NutrientProfile daClone = new NutrientProfile();
            
-            HashSet<String> set = new HashSet();
+            HashSet<String> set = new HashSet<>();
             set.addAll(Arrays.asList(NutrientProfile.flds));
              Class<?> c = IngredientPOJO.class;
             Field[] fields = c.getDeclaredFields();

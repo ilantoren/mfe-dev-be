@@ -13,12 +13,13 @@ spring:
     name:  mfe-rest-demo 
   data:
     mongodb: 
-     
+      host: localhost:27017
+      database: demo    
       
-     host: ds145728-a0.mlab.com:45728
-     password: javadevelop
-     username: java
-     database: myfavoreats-develop    
+#     host: ds145728-a0.mlab.com:45728
+#     password: javadevelop
+#     username: java
+#     database: myfavoreats-develop    
     
 #      host: ds151719-a0.mlab.com:51719
 #     database: mfe-front-end

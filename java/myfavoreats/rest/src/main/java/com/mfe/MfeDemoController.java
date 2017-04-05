@@ -640,14 +640,13 @@ public class MfeDemoController {
 		String substitutions  = mongoOperations.getCollectionName(Substitutions.class);
 		log.info( "starting mapReduce using " + substitutions );
 		DBCollection collect = mongoOperations.getCollection(substitutions);
-		MapReduceCommand mr = new MapReduceCommand(collect, mapfunction, reducefunction, "substitutionsListSource", MapReduceCommand.OutputType.REPLACE,  query.getQueryObject() );
+		new MapReduceCommand(collect, mapfunction, reducefunction, "substitutionsListSource", MapReduceCommand.OutputType.REPLACE,  query.getQueryObject() );
 		/*MapReduceResults<MapReduceValue> values = mongoOperations.mapReduce(query,  substitutions
 				, mapfunction
 				, reducefunction
 				, new MapReduceOptions().outputCollection("substitutionsListSource").verbose(true)
 				, MapReduceValue.class);
 				*/
-		
 		Long elapsed = new Date().getTime() - start.getTime();
 		log.info( "building drop down titles finshed in " + elapsed + " ms");
 	}

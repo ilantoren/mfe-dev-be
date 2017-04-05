@@ -257,7 +257,6 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 			substitutedRecipe.setRecipeChange(subCalculation.getRecipeChange());
 			substitutedRecipe.setSubstitutionRule(subCalculation.getDescription());
 			substitutedRecipe.setSubs(null);   // presenting the same recipe twice one with changes and original. 
-			substitutedRecipe.setSubs( null );
 			recipeList.add(0, substitutedRecipe);
 			recipeList.add(1, pojo);
 		} catch (Exception e) {

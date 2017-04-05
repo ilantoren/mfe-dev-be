@@ -5,13 +5,6 @@
  */
 package com.mfe.model.recipe;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.mfe.model.ingredient.IngredientPOJO;
-import com.mfe.model.ingredient.IngredientService;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -25,8 +18,15 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.text.WordUtils;
-import org.springframework.data.annotation.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.mfe.model.ingredient.IngredientPOJO;
+import com.mfe.model.ingredient.IngredientService;
 
 /**
  *
@@ -98,7 +98,8 @@ public class NutrientProfile extends IngredientPOJO {
     	IngredientService service = new IngredientService(this);
     	service.scaleAll(scale);
     }
-
+    
+    @Deprecated
     public void setAll( IngredientPOJO obj, Double mult) {
         IngredientService service = new IngredientService( this );
         if (obj != null &&  obj.getUid() !=null &&  !obj.getUid().equals("0")) {
@@ -184,12 +185,11 @@ public class NutrientProfile extends IngredientPOJO {
         service.divide(changed);
     }
 
+  
     @Override
     public NutrientProfile clone() {
-        IngredientService service = new IngredientService(this);
-       
             try {
-				return service.clone(this);
+				return IngredientService.clone(this);
 			} catch (IOException e) {
 				Logger.getLogger( getClass().getName()).log( Level.SEVERE, "cloning", e);
 			}

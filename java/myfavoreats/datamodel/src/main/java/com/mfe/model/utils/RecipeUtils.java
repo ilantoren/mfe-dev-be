@@ -76,6 +76,8 @@ public class RecipeUtils {
                 }
             case LITER:
                 return "l";
+            case KILO:
+            	return "kg";
         }
         return token.lexeme();
     }

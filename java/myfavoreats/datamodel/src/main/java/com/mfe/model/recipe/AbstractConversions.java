@@ -24,6 +24,8 @@ public class AbstractConversions {
         defaults.add( new Conversions("lb", "454", "1" ));
         defaults.add( new Conversions("tbsp", "15", "1"));
         defaults.add( new Conversions( "tsp", "5", "1"));
+        defaults.add( new Conversions( "kg", "1000","1"));
+        defaults.add( new Conversions("ml", "1", "1"));
         return defaults;
     }
 
@@ -44,6 +46,9 @@ public class AbstractConversions {
                 return new BigDecimal(0.0625);
             case TSP:
                 return new BigDecimal( 0.0208333 );
+            case LITER:
+            	return new BigDecimal(4.23);
+           
                 
         }
         return BigDecimal.ONE;
