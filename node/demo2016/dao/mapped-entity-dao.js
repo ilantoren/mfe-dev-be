@@ -1,4 +1,3 @@
-"use strict";
 var log = require('../log');
 
 class MappedEntityDao{
