@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -46,13 +47,13 @@ public interface RecipeRepository extends MongoRepository<RecipePOJO, String> {
 	List<RecipePOJO> findParentAndChildren( String id );
 	
 	@Query(value = "{$and: [ {substitutionRule:{$exists:1}}, {substitutionRule: ?0}]}" , fields="{parentId:1, title:1, site:1}")
-	List<RecipePOJO> findRecipesBySubstituteRule( String rule );
+	List<RecipePOJO> findRecipesBySubstituteRule( String rule, Sort sort);
 	
 	@Query( value = "{ \"steps.lines.subs.description\" : ?0 }")
 	List<RecipePOJO> findRecipesBySubstitution( String description );
 
 	@Query( value="{$text: {$search: ?0}}", fields = "{ title:1, site:1, urn:1}")
-	Stream<RecipePOJO> findBySearchPhrase( String phrase, Pageable pageable );
+	Stream<RecipePOJO> findBySearchPhrase( String phrase, Pageable pageable  );
 
 	@Query( value="{title:{$regex: ?0}}", fields = "{ title:1, site:1, urn:1}")
 	Stream<RecipePOJO> findTitleStartsWith( String expr );
@@ -64,6 +65,6 @@ public interface RecipeRepository extends MongoRepository<RecipePOJO, String> {
 	public Stream<RecipePOJO> streamAllRecipes();
 	
 	@Query( value = "{ _id: {$in: ?0 }}", fields= "{ title:1, site:1, urn:1, photos:1, website:1}")
-	List<RecipePOJO>  findRecipesById( List<String> idList );
+	List<RecipePOJO>  findRecipesById( List<String> idList, Sort sort );
 	
 }

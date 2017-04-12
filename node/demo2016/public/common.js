@@ -108,6 +108,9 @@ function selectSubstitute( link ) {
 	//updateDropdown(1, id, target);
 }
 
+
+
+
 function processUrl( url, selector) {
 	    var xmlfile = Saxon.requestXML( url );
         var xsl2 = Saxon.requestXML("display-recipe-pair.xsl")
@@ -115,9 +118,18 @@ function processUrl( url, selector) {
         Saxon.setLogLevel('INFO');
         proc2.setParameter(null, 'title', selector)
         proc2.setSuccess( performAfterSuccess);
-        proc2.transformToDocument( xmlfile );
         
+        // wrap in promise to ensure transform is all done async
+        var promise = new Promise(function( resolve, reject) {
+        		proc2.transformToDocument( xmlfile );
+        		resolve("Transform completed");	
+        });
         
+        promise.then(function(result) {
+        		console.log(result); 
+        }, function(err) {
+				console.log(err); 
+		});
 }
 
 
