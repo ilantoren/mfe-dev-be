@@ -1,10 +1,11 @@
 applications:
 - path: .
-  memory: 256M
+  memory: 512M
   instances: 1
   domain: mybluemix.net
-  name: mfe-tech-demo2
-  host: mfe-tech-demo2
+  name: mfe-dev-fe
+  host: mfe-dev-fe
   disk_quota: 1024M
   services:
-  - mfe-tech-rest
+  - mfe-rest-service
+  - myfavoreats-develop

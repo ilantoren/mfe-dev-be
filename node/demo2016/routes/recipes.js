@@ -21,7 +21,7 @@ var client = new Client();
 var host = appEnv.url;
 
 
-var service = appEnv.getService("mfe-dev-be")
+var service = appEnv.getService("mfe-rest-service")
 
 if ( service == null) {
 	var resthost = "localhost";
@@ -40,6 +40,7 @@ client.registerMethod( "childAndParent",      "http://"+ resthost + restport + "
 client.registerMethod( "recipeByParent",      "http://"+ resthost + restport + "/recipes/parent/${id}", "GET");
 client.registerMethod( "recipeBySubstitute",  "http://"+ resthost + restport + "/recipes/substitute/${description}", "GET");
 client.registerMethod( "recipeBySearchPhrase","http://"+ resthost + restport + "/recipes/title/search/${phrase}", "GET");
+client.registerMethod( "recipeAutoComplete","http://"+ resthost + restport + "/recipes/title/autocomplete/${phrase}", "GET");
 client.registerMethod( "mongoImage"          ,"http://"+ resthost + restport + "/recipe/image/${id}", "GET");
 client.registerMethod( "recipeWithSubstitute", "http://"+ resthost + restport + "/recipes/with-substitute/${id}", "GET");
 client.registerMethod( "recipeSubstitutions", "http://" +resthost  + restport + "/recipe/substitutions", "GET" );
@@ -156,17 +157,33 @@ router.get('/recipes/changed/title', function( req, res, next ) {
 
 router.get('/recipes/title/search/:phrase', function( req, res, next ) {
 	res.header("Access-Control-Allow-Origin", host);
-    res.header("Access-Control-Allow-Methods", "GET, POST");	
-    var searchphrase = req.params.phrase;
-    console.log( '/recipes/title/search/:phrase  PHRASE: ' + searchphrase);
-    var phrase = escape( searchphrase );
-    var args = { path : { "phrase": phrase}};
-    client.methods.recipeBySearchPhrase( args, function( data, response ) {
-    		if ( data )
-    			res.send(data);
-    		else 
-    			console.log( response );
-    });
+	res.header("Access-Control-Allow-Methods", "GET, POST");
+	var searchphrase = req.params.phrase;
+	console.log( '/recipes/title/search/:phrase  PHRASE: ' + searchphrase);
+	var phrase = escape( searchphrase );
+	var args = { path : { "phrase": phrase}};
+	client.methods.recipeBySearchPhrase( args, function( data, response ) {
+		if ( data )
+			res.send(data);
+		else
+			console.log( response );
+	});
+});
+
+
+router.get('/recipes/title/autocomplete/:phrase', function( req, res, next ) {
+	res.header("Access-Control-Allow-Origin", host);
+	res.header("Access-Control-Allow-Methods", "GET, POST");
+	var searchphrase = req.params.phrase;
+	console.log( '/recipes/title/search/:phrase  PHRASE: ' + searchphrase);
+	var phrase = escape( searchphrase );
+	var args = { path : { "phrase": phrase}};
+	client.methods.recipeAutoComplete( args, function( data, response ) {
+		if ( data )
+			res.send(data);
+		else
+			console.log( response );
+	});
 });
 
 router.get('/recipes/original', function( req, res, next ) {
@@ -260,7 +277,7 @@ router.get('/recipes/with-substitute/:id', function (req, res, next) {
 	}
     console.log( args );
     console.log( "/recipes/with-substitute/: " + id + " target is " + target);
-    var regexp = new RegExp(/>(\d|\.)+\s?[gm|kcal]+</g);
+    var regexp = new RegExp(/>([\d|\.]+)\s?[gm|kcal]+</g);
     client.methods.recipeWithSubstitute( args, function( data, response ) {
     		if ( data) {
     			console.log( "Request for " + id + " succeeded");

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Favoreats</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <![endif]-->
+
+</head>
+<body>
+
+<script>
+    $(document).ready(function() {
+        $("#searchRecipe").on("input", function(e) {
+            var val = $(this).val();
+            if(val === "") return;
+            console.log(val);
+            $.get("/api/recipes/title/autocomplete/" + val, function(res) {
+                var dataList = $("#recipeTitle");
+                dataList.empty();
+                if(res.length) {
+                    for(var i=0, len=res.length; i<len; i++) {
+                        var opt = $("<option></option>").attr("value", res[i].title);
+                        dataList.append(opt);
+                    }
+                }
+            },"json");
+        });
+
+        $("#searchIngredient").on("input", function(e) {
+            var val = $(this).val();
+            if(val === "") return;
+            console.log(val);
+            $.get("/api/recipes/title/autocomplete/" + val, function(res) {
+                var dataList = $("#recipeTitle");
+                dataList.empty();
+                if(res.length) {
+                    for(var i=0, len=res.length; i<len; i++) {
+                        var opt = $("<option></option>").attr("value", res[i].title);
+                        dataList.append(opt);
+                    }
+                }
+            },"json");
+        });
+    });
+</script>
+
+<h1>Favoreats</h1>
+
+
+<div class="row">
+    <div class="col-md-3">
+        Search Recipe Title: <input list="searchresults" name="search" id="searchRecipe" style="width:100%">
+        <datalist id="recipeTitle">
+        </datalist>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        Search Recipe Title: <input list="searchresults" name="search" id="search" style="width:100%">
+        <datalist id="searchresults">
+        </datalist>
+    </div>
+</div>
+</body>
+</html>

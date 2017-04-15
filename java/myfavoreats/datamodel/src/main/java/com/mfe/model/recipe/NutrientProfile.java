@@ -5,13 +5,6 @@
  */
 package com.mfe.model.recipe;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.mfe.model.ingredient.IngredientPOJO;
-import com.mfe.model.ingredient.IngredientService;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -25,7 +18,15 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.text.WordUtils;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.mfe.model.ingredient.IngredientPOJO;
+import com.mfe.model.ingredient.IngredientService;
 
 /**
  *
@@ -38,11 +39,12 @@ public class NutrientProfile extends IngredientPOJO {
     
     @JsonIgnore
       public static final  String[] flds  =  new String[] { "calcium", "carbohydrate", "water" ,"lactose", "fructose", "cholesterol",
-          "protein", "satFat", "sodium", "sucrose",  "totalFat","sugars", "fiber",  "calories" , "water"};
+          "protein", "satFat", "sodium", "sucrose",  "totalFat","sugars", "fiber",  "calories" , "water", "ref"};
     @JsonIgnore
       private Pattern removeTrailingLetters = Pattern.compile( "([\\d|\\.]+)(\\D+)$");
     
-      
+
+      private Double ref;
       
       public NutrientProfile() {}
     
@@ -56,6 +58,7 @@ public class NutrientProfile extends IngredientPOJO {
     }
 
     public void setTotalGrams(Double totalGrams) {
+    	this.ref = totalGrams;
         this.totalGrams = totalGrams;
     }
 
@@ -95,14 +98,13 @@ public class NutrientProfile extends IngredientPOJO {
     	IngredientService service = new IngredientService(this);
     	service.scaleAll(scale);
     }
-
+    
+    @Deprecated
     public void setAll( IngredientPOJO obj, Double mult) {
         IngredientService service = new IngredientService( this );
         if (obj != null &&  obj.getUid() !=null &&  !obj.getUid().equals("0")) {
             service.setAll(obj, mult);
         }
-
-      //  gramsPerPortion = 100 * mult;
     }
 
     @JsonProperty
@@ -123,6 +125,10 @@ public class NutrientProfile extends IngredientPOJO {
             sb.append( WordUtils.capitalize(s) ).append(",");
         }
         return sb.toString();
+    }
+    
+    public Double getRef() {
+    	return ref;
     }
 
     @Override
@@ -179,12 +185,11 @@ public class NutrientProfile extends IngredientPOJO {
         service.divide(changed);
     }
 
+  
     @Override
     public NutrientProfile clone() {
-        IngredientService service = new IngredientService(this);
-       
             try {
-				return service.clone(this);
+				return IngredientService.clone(this);
 			} catch (IOException e) {
 				Logger.getLogger( getClass().getName()).log( Level.SEVERE, "cloning", e);
 			}

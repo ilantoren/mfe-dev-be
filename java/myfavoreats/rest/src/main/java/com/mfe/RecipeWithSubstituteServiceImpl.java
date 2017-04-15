@@ -1,6 +1,7 @@
 package com.mfe;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,11 +63,11 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		
 		
 		List<RecipePOJO> cached;
-		String id = pojo == null ? null : pojo.getId();
+		String recipeId = pojo == null ? null : pojo.getId();
 		
-		log.info( "Attempting to retrieve cached recipes substitution already calculated for recipePOJO " + id );
+		log.info( "Attempting to retrieve cached recipes substitution already calculated for recipePOJO " + recipeId );
 		  if ( optionId.equals("NONE")) { 
-			  log.info( "no target specified: using first substitution ");
+			  log.info( "recipeId: " + recipeId + " no optionUid specified: looking for first cached substitution ");
 			  cached =getCachedRecipeSubsCalculationByRecipe( pojo );
 			  }else { 
 				  log.info( "Substitution specified " + optionId );
@@ -81,10 +82,10 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		  
 		  /* processing in case where there is no cached recipe */
 		 
-		String recipeId = pojo.getId();
+		
 		Substitutions substitutions = substitutionsRepository.findByRecipeId(recipeId);
 		if (substitutions == null) {
-			log.warn("No substitutions for " + pojo.getId());
+			log.warn("No substitutions for recipeId of " + recipeId );
 
 			ArrayList<RecipePOJO> tmp = new ArrayList<RecipePOJO>();
 			tmp.add(pojo);
@@ -143,15 +144,23 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		return optFound.isPresent();
 	}
 	private List<RecipePOJO> getCachedRecipeSubsCalculationByRecipe(RecipePOJO pojo) {
-		
+		String recipeId = pojo.getId();
+		log.info( "recipeId: " + recipeId + "getCachedRecipeSubsCalculationByRecipe(RecipePOJO pojo)");
+		Date start = new Date();
 		ArrayList<RecipePOJO> results = new ArrayList<>();
-		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository.findByRecipeid(pojo.getId())
+		Optional<RecipeSubsCalculation> calculation = recipeSubsCalculationRepository.findByRecipeid(recipeId)
 				.stream().findAny();
 		calculation.ifPresent(recipeSubsCalculation -> {
-		    List<RecipePOJO> list = getRecipeAndSubstitute( pojo, recipeSubsCalculation.getRecipeSub(), recipeSubsCalculation.getRecipeSub().getOptions().get(0) );
-			results.add(0, list.get(0));
-			results.add(1, list.get(1));
+			try {
+				List<RecipePOJO> list = useRecipeSubsCalculation(pojo, recipeSubsCalculation );
+				results.add(0, list.get(0));
+				results.add(1, list.get(1));
+			} catch (BadParameterException e) {
+				log.error("", e);  //TODO
+			}
 		});
+		Long elapsed = new Date().getTime() - start.getTime();
+		log.info("recipeId " + recipeId +  " getCachedRecipeSubsCalculationByRecipe(RecipePOJO) elapsed:" + elapsed + "ms" );
 		return results;
 	}
 
@@ -161,9 +170,14 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		RecipeSubsCalculation calculation = recipeSubsCalculationRepository
 				.findByOptionUid( optionId);
 		if (  calculation != null ){
-			List<RecipePOJO> list = useRecipeSubsCalculation(pojo, calculation );
-			results.add(0, list.get(0));
-			results.add(1, list.get(1));
+			List<RecipePOJO> list;
+			try {
+				list = useRecipeSubsCalculation(pojo, calculation );
+				results.add(0, list.get(0));
+				results.add(1, list.get(1));
+			} catch (BadParameterException e) {
+				log.error("", e);  //TODO
+			}	
 		}
 		
 		return results;
@@ -172,13 +186,27 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	/**
 	 * @param pojo
 	 * @param recipeSubsCalculation
+	 * @throws BadParameterException 
 	 */
-	public List<RecipePOJO> useRecipeSubsCalculation(RecipePOJO pojo, RecipeSubsCalculation recipeSubsCalculation) {
+	public List<RecipePOJO> useRecipeSubsCalculation(RecipePOJO pojo, RecipeSubsCalculation recipeSubsCalculation) throws BadParameterException {
+		String recipeId = pojo.getId();
+		log.info("Using recipeSubsCalculation for recipeId: " + recipeId + "  "  + recipeSubsCalculation.getDescription()  );
+		
 		ArrayList<RecipePOJO> results = new ArrayList<>();
-		RecipePOJO substitute = pojo.clone();
-		substitute.setRecipeChange(recipeSubsCalculation.getRecipeChange());
-		substitute.setNutrients(recipeSubsCalculation.getNutrients());
-		results.add(0, substitute);
+		recipeChangeService.calculateRecipeNutrition(pojo);
+		Substitutions substitutions = substitutionsRepository.findByRecipeId(recipeId);
+		if ( substitutions == null ) {
+			log.warn( "recipeId " + recipeId + " missing substitutions");
+		}
+		else {
+			pojo.setSubs(substitutions.getSubs());
+			fillInSubsPerLine( pojo );
+		}
+		
+		RecipePOJO substituteRecipe = pojo.clone();
+		substituteRecipe.setId( pojo.getId() );
+		recipeChangeService.changeRecipeWithSubstitution(substituteRecipe, recipeSubsCalculation);
+		results.add(0, substituteRecipe );
 		results.add(1, pojo);
 		return results;
 	}
@@ -187,38 +215,52 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo) {
 		return getRecipeAndSubstitute(pojo, "NONE");
 	}
+	
+	public List<RecipePOJO> getRecipeAndSubstitute( RecipePOJO pojo, RecipeSubsCalculation recipeSubsCalculation ) {
+		RecipeSub recipeSub = recipeSubsCalculation.getRecipeSub();
+		RecipeSubsOption recipeSubsOption = recipeSubsCalculation.getOption();
+		return getRecipeAndSubstitute( pojo, recipeSub, recipeSubsOption );
+	}
 
 	public List<RecipePOJO> getRecipeAndSubstitute(RecipePOJO pojo, RecipeSub substitution, RecipeSubsOption option) {
 		List<RecipePOJO> recipeList = new ArrayList<>();
+		final String recipeId = pojo.getId();
+		RecipeSubsCalculation subCalculation = null;
+	
+			 try {
+				subCalculation = recipeChangeService.createRecipeSubCalculation(pojo, substitution,
+					option);
+			} catch (Exception e1) {
+				log.warn( "recipeId: " + recipeId , e1);
+			}
+		
+		String message = String.format("recipeId %s -  substitution uid %s  and option uid  "
+				, recipeId
+				, substitution.getUid()
+				, option.getUid() );
+		if (  subCalculation == null  ) {
+			log.warn( "There is no substitutionsCalculation available " + message);
+			return  recipeList;
+		}
 		
 		try {
 			recipeChangeService.calculateRecipeNutrition(pojo);
 			
-			log.info( "fillInSubPerlLine");
+			log.info( "fillInSubPerlLine recipeId " + recipeId);
 			fillInSubsPerLine(pojo);
-			log.info( "fillInSubPerlLine - completed");
+			log.info( "fillInSubPerlLine - completed recipeId " + recipeId);
 			RecipePOJO substitutedRecipe = pojo.clone();
-	
-			
-			
-			RecipeSubsCalculation subCalculation = recipeChangeService.createRecipeSubCalculation(substitutedRecipe, substitution,
-					option);
-
-			if (subCalculation == null) {
-				return new ArrayList<RecipePOJO>();
-			}
-			log.info( "applying substitution and option " + subCalculation.getSubstitutionId() + " " + subCalculation.getOption().getUid() + "  to " + substitutedRecipe.getId() );
+			substitutedRecipe.setId( recipeId + " sub");
+			log.info( message );
 			recipeChangeService.changeRecipeWithSubstitution(substitutedRecipe, subCalculation);
-			substitutedRecipe.setNutrients(subCalculation.getNutrients());
+			
 			substitutedRecipe.setRecipeChange(subCalculation.getRecipeChange());
 			substitutedRecipe.setSubstitutionRule(subCalculation.getDescription());
 			substitutedRecipe.setSubs(null);   // presenting the same recipe twice one with changes and original. 
-			pojo.setSubs( null );
-			recipeList.add(substitutedRecipe);
-			recipeList.add(pojo);
-		} catch (BadParameterException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			recipeList.add(0, substitutedRecipe);
+			recipeList.add(1, pojo);
+		} catch (Exception e) {
+			log.error("FAILED: " + message, e);
 		}
 		return recipeList;
 	}

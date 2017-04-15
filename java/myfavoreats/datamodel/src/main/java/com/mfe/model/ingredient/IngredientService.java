@@ -51,7 +51,7 @@ public class IngredientService {
         String[] useFields = {"energy", "adj_protein", "alcohol", "caffeine", "calcium", "carbohydrate", "cholesterol",
             "fiber", "glucose", "iron", "lactose", "magnesium", "monoFat", "polyFat", "protein", "satFat",
             "sodium", "sucrose", "sugars", "theobromine", "transFat", "vitA", "vitC", "vitD", "totalFat", "calories", "starch", "water"};
-        Set<String> set = new HashSet();
+        Set<String> set = new HashSet<>();
         set.addAll(Arrays.asList(useFields));
         return set;
     }
@@ -83,7 +83,7 @@ public class IngredientService {
                 try {
                     f = IngredientPOJO.class.getDeclaredField(s);
                     v = f.get(pojo).toString();
-                    setNutrientField(v, s, mult, f, false);
+                    setNutrientField(v, s, mult, f, true);
                 } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException ex) {
                     Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -93,6 +93,7 @@ public class IngredientService {
 
     }
 
+    @Deprecated
 	public void setAll(IngredientPOJO obj, Double mult) {
 
 		Iterator<String> it = getSet().iterator();
@@ -117,14 +118,12 @@ public class IngredientService {
 			} catch (IllegalAccessException ex) {
 				Logger.getLogger(IngredientPOJO.class.getName()).log(Level.SEVERE, null, ex);
 			}
-			setNutrientField(v, s, mult, f);
+			setNutrientField(v, s, mult, f, true);
 
 		}
 	}
 
-    private void setNutrientField(String v, String s, Double mult, Field f) {
-        setNutrientField(v, s, mult, f, true);
-    }
+   
 
     protected void setNutrientField(String v, String s, Double mult, Field f, boolean scale) {
         StringBuilder sb = new StringBuilder();
@@ -268,7 +267,7 @@ public class IngredientService {
     public static  NutrientProfile cloneOld( NutrientProfile orig ) throws IllegalArgumentException, IllegalAccessException {
            NutrientProfile daClone = new NutrientProfile();
            
-            HashSet<String> set = new HashSet();
+            HashSet<String> set = new HashSet<>();
             set.addAll(Arrays.asList(NutrientProfile.flds));
              Class<?> c = IngredientPOJO.class;
             Field[] fields = c.getDeclaredFields();

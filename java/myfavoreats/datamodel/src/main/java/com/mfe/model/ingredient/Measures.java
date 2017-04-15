@@ -10,5 +10,5 @@ package com.mfe.model.ingredient;
  * @author richardthorne
  */
 public enum Measures {
-   GAL, QT, QUART, PINT, CUP, TBL, TBSP, TSP, EA, CN, OZ, PK, SMALL, 
+   GAL, QT, QUART, PINT, CUP, TBL, TBSP, TSP, EA, CN, OZ, PK, SMALL, KILO, LITER
 }

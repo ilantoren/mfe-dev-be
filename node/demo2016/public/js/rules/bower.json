@@ -1,0 +1,16 @@
+{
+  "name": "myfavoreats-rules",
+  "version": "1.0.0",
+  "homepage": "",
+  "authors": [
+    "Shlomo Schwarcz"
+  ],
+  "description": "",
+  "moduleType": [
+    "node"
+  ],
+  "devDependencies": {},
+  "dependencies": {
+    "ag-grid": "^9.0.0"
+  }
+}
