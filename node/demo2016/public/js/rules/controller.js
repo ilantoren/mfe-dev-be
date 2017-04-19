@@ -1,78 +1,59 @@
-rulesApp.controller( "RulesController",  function($scope, $http, $rootScope) {
+rulesApp.controller( "RulesController",  function($scope, $http, $rootScope, $state) {
 
-    $scope.test = 'abc';
+    $scope.sources = [];
+    $scope.targets = [];
+    $scope.functions = ['recipe_tag_prob'];
+
+    $scope.tags = [
+        {id: 1, label: "is_rice"},
+        {id: 2, label: "is_potato"},
+        {id: 3, label: "is_grated_potato"},
+        {id: 4, label: "is_mashed_potatoes"},
+        {id: 5, label: "is_soup"},
+        {id: 6, label: "is_salad"}
+    ];
+
+    $scope.operations = ['=','<','>', '<>'];
+
+    $scope.tagsSettings = {
+        enableSearch: true,
+        smartButtonMaxItems: 2,
+        smartButtonTextConverter: function(itemText, originalItem) {
+            return itemText;
+        }
+    };
 
     $scope.sourcesGridOptions = {
-
         columnDefs: [
-            {headerName: "ID", field: "id", editable: false},
-            {headerName: "Name", field: "name"},
+       //     {headerName: "ID", field: "id", editable: false,  width:20},
+            {headerName: "Name", field: "name", enableCellEditOnFocus: true,
+                cellTemplate:'<div><input type="text" ng-model="row.entity.name" placeholder="sources" uib-typeahead="ing for ing in {{grid.appScope.getIngredients(row.entity.name)}}" typeahead-loading="loadingLocations" typeahead-no-results="noResults" class="form-control"></div>'},
             {headerName: "Quantity", field: "qty", width: 80}
-        ],
+        ], rowHeight:22, data: $scope.sources, multiSelect:false, enableHorizontalScrollbar:1, onRegisterApi : function(gridApi){
+            $scope.sourcesGridOptions.gridApi = gridApi;
+    }};
 
-        defaultColDef: {
-            editable: true,
-            filter: 'text'
-        },
-
-        rowData: [
-            //{
-            //    "id": "57b936a9a413460ad9a27bdd",
-            //    "name": "pearl barley",
-            //    "qty": 0.7
-            //},
-            //{
-            //    "id": "57b9368ea413460ad9a27a4b",
-            //    "name": "millet",
-            //    "qty": 0.688
-            //},
-            //{
-            //    "id": "57b93688a413460ad9a2792c",
-            //    "name": "quinoa",
-            //    "qty": 1
-            //}
-        ]
+    $scope.getIngredients = function(text){
+        return text;
     };
 
 
     $scope.targetGridOptions = {
-
         columnDefs: [
-            {headerName: "ID", field: "id", editable: false},
-            {headerName: "Name", field: "name"},
-            {headerName: "Quantity", field: "qty", width: 80}
-        ],
-
-        defaultColDef: {
-            editable: true,
-            filter: 'text'
-        },
-
-        rowData: [
-            //{
-            //    "id": "57b936a9a413460ad9a27bdd",
-            //    "name": "pearl barley",
-            //    "qty": 0.7
-            //},
-            //{
-            //    "id": "57b9368ea413460ad9a27a4b",
-            //    "name": "millet",
-            //    "qty": 0.688
-            //},
-            //{
-            //    "id": "57b93688a413460ad9a2792c",
-            //    "name": "quinoa",
-            //    "qty": 1
-            //}
-        ]
-    };
+           // {headerName: "ID", field: "id", editable: false,  width:20},
+            {headerName: "Name", field: "name", enableCellEditOnFocus: true, width:200, editableCellTemplate:''},
+            {headerName: "Quantity", field: "qty", width: 80},
+            {headerName: "Rule (optional)", field: "rule", width: 800}
+        ], rowHeight:22, data: $scope.targets, multiSelect:false, enableHorizontalScrollbar:1, onRegisterApi : function(gridApi){
+            $scope.targetGridOptions.gridApi = gridApi;
+        }};
 
     $scope.addSource = function(){
-        $scope.sourcesGridOptions.api.addItems([{id:0, name:'', qty:1}]);
+        $scope.sources.push({});
     };
 
     $scope.addTarget = function(){
-        $scope.targetGridOptions.api.addItems([{id:0, name:'', qty:1}]);
+        $scope.targets.push({});
     };
 
     $scope.getRule = function(id){
@@ -81,18 +62,22 @@ rulesApp.controller( "RulesController",  function($scope, $http, $rootScope) {
             url: 'controller/rules/' + id
         }).then(function(response) {
             $scope.rule = response.data;
+            if ($scope.rule.sources){
+                for (var i=0; i<$scope.rule.sources.length; i++){
+                    $scope.sources.push($scope.rule.sources[i]);
+                }
 
-            $scope.sourcesGridOptions.api.setRowData($scope.rule.sources);
-            $scope.sourcesGridOptions.api.refreshView();
+                for (i=0; i<$scope.rule.targets.length; i++){
+                    $scope.targets.push($scope.rule.targets[i]);
+                }
+            }
 
-            $scope.targetGridOptions.api.setRowData($scope.rule.targets);
-            $scope.targetGridOptions.api.refreshView();
         }, function errorCallback(response) {
             alert("Error: Failed to generate ID " + response.statusText);
         });
     };
 
-    $scope.rule = {};
+    $scope.rule = {rules:[{tags:[], func:'recipe_tag_prob'}]};
 
     if ($rootScope.ruleId){
       $scope.getRule($rootScope.ruleId);
@@ -102,5 +87,30 @@ rulesApp.controller( "RulesController",  function($scope, $http, $rootScope) {
         $scope.getRule(ruleId);
     });
 
+    $scope.addRuleRow = function(){
+        $scope.rule.rules.push({tags:[], func:'recipe_tag_prob'});
+    };
+
+    $scope.removeRuleRow = function(row){
+       if ($scope.rule.rules.length > 1){
+           for (var i=0; i<$scope.rule.rules.length; i++){
+               if ($scope.rule.rules[i] == row){
+                   $scope.rule.rules.splice(i, 1);
+                   break;
+               }
+           }
+       }
+
+    };
+
+    $scope.rules = function(){
+        $scope.rule = null;
+        $state.go('all-rules');
+    };
+
+    $scope.newRule = function(){
+        $scope.rule = {rules:[{tags:[], func:'recipe_tag_prob'}]};
+        $state.go('new-rule');
+    };
 
 });

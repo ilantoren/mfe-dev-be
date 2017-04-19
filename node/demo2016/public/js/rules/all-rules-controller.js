@@ -3,11 +3,11 @@ rulesApp.controller( "AllRulesCtrl",  function($scope, $http, $state, $rootScope
     $scope.rulesGridOptions = {
 
         columnDefs: [
-            {headerName: "ID", field: "_id"},
-            {headerName: "Name", field: "name"},
-            {headerName: "Origin", field: "origin"},
-            {headerName: "Condition", field: "cond"},
-            {headerName: "Probability", field: "probability"}
+            //{headerName: "ID", field: "_id", width:20, visible:false, hidden:true},
+            {headerName: "Name", field: "name", width:600},
+            {headerName: "Origin", field: "origin", width:150},
+            {headerName: "Condition", field: "cond",  width:750},
+            {headerName: "Probability", field: "probability",  width:80}
         ],
 
         defaultColDef: {
