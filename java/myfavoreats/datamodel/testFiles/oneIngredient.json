@@ -1,0 +1,72 @@
+{"conversions": [
+    {
+        "measure": "tbsp",
+        "gramPerUnit": "12.800"
+    },
+    {
+        "measure": "cup",
+        "gramPerUnit": "205.000"
+    },
+    {
+        "measure": "tbl",
+        "gramPerUnit": "12.800"
+    },
+    {
+        "measure": "tbl",
+        "gramPerUnit": "12.813"
+    },
+    {
+        "measure": "tbsp",
+        "gramPerUnit": "12.813"
+    },
+    {
+        "measure": "oz",
+        "gramPerUnit": "25.625"
+    },
+    {
+        "measure": "tsp",
+        "gramPerUnit": "4.271"
+    }
+],
+"energy": "3664kJ",
+"adj_protein": "0",
+"alcohol": "0g",
+"caffeine": "0mg",
+"calcium": "4mg",
+"carbohydrate": "0g",
+"choFact": "3.87",
+"cholesterol": "256mg",
+"desc": "Butter oil, anhydrous",
+"fatFact": "8.79",
+"fgId": "0100",
+"fiber": "0g",
+"foodGroup": "Dairy and Egg Products",
+"glucose": "0",
+"id": "01003",
+"iron": "0mg",
+"lactose": "0",
+"magnesium": "0mg",
+"monoFat": "28.732g",
+"nfactor": "6.38",
+"polyFat": "3.694g",
+"proFact": "4.27",
+"protein": "0.28g",
+"satFat": "61.924g",
+"sodium": "2mg",
+"sucrose": "0",
+"sugars": "0g",
+"theobromine": "0mg",
+"transFat": "0",
+"vitA": "3069IU",
+"vitC": "0mg",
+"vitD": "73IU",
+"totalFat": "99.48g",
+"water": "0.24g",
+"fructose": "0",
+"calories": "876kcal",
+"starch": "0",
+"fatFlag": "7.115455683376051",
+"carbFlag": null,
+"NaFlag": null,
+"naFlag": null
+}

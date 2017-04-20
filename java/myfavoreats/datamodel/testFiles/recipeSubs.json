@@ -1,0 +1,56 @@
+{"subs" : [
+		{
+			"origin" : "Book",
+			"source" : "angel hair pasta",
+			"version" : "1",
+			"type" : "list-single-pick",
+			"options" : [
+				{
+					"target" : "rice pasta"
+				},
+				{
+					"target" : "buckwheat pasta"
+				},
+				{
+					"target" : "spelt pasta"
+				},
+				{
+					"target" : "soba"
+				},
+				{
+					"target" : "capellini"
+				},
+				{
+					"target" : "vermicelli"
+				},
+				{
+					"target" : "chinese wheat noodles"
+				},
+				{
+					"target" : "quinoa pasta"
+				},
+				{
+					"target" : "whole grain spaghetti"
+				},
+				{
+					"target" : "rice noodles"
+				},
+				{
+					"target" : "egg noodles"
+				},
+				{
+					"target" : "pasta"
+				},
+				{
+					"target" : "bucatini"
+				},
+				{
+					"target" : "spaghetti"
+					},
+				{
+					"target" : "perciatelli"
+				}
+			]
+		}
+	]
+}

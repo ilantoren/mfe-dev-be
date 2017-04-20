@@ -1,0 +1,355 @@
+{
+    "_id": "57e5096ff2cad8fc77da5125",
+    "_class": "com.mfe.model.RecipePOJO",
+    "title": "Sauerkraut Cabbage Roll Soup",
+    "totalGrams": "0",
+    "gramsPerPortion": "100",
+    "website": "Closet Cooking",
+    "servings": 1,
+    "categories": [],
+    "urn": "http://www.closetcooking.com/2010/02/sauerkraut-cabbage-roll-soup.html",
+    "steps": [
+        {
+            "instruction": "Brown the ground beef and set aside draining the grease from the pan.",
+            "lines": [
+                {
+                    "measure": "l",
+                    "quantity": "1",
+                    "food": "ground beef",
+                    "gram": 454,
+                    "ndb": "23508",
+                    "numericQuantity": "1.0",
+                    "protein": "78.8598g",
+                    "calories": "1035.1200000000001kcal",
+                    "sodium": "258.78000000000003mg",
+                    "cholesterol": "313.26mg",
+                    "carbohydrates": "0.0g",
+                    "totalFat": "77.4978g",
+                    "satFat": "30.93102g",
+                    "original": "1 pound ground beef        ",
+                    "subs": []
+                },
+                {
+                    "measure": "tbsp",
+                    "quantity": "1",
+                    "food": "oil",
+                    "gram": 15,
+                    "ndb": "04645",
+                    "numericQuantity": "1.0",
+                    "protein": "0.0g",
+                    "calories": "132.6kcal",
+                    "sodium": "0.0mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "0.0g",
+                    "totalFat": "15.0g",
+                    "satFat": "1.5175500000000002g",
+                    "original": "1 tablespoon oil        ",
+                    "subs": []
+                },
+                {
+                    "measure": "ea",
+                    "quantity": "1",
+                    "food": "onion",
+                    "gram": 150,
+                    "ndb": "11282",
+                    "numericQuantity": "1.0",
+                    "protein": "1.6500000000000001g",
+                    "calories": "60.0kcal",
+                    "sodium": "6.0mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "14.01g",
+                    "totalFat": "0.15000000000000002g",
+                    "satFat": "0.063g",
+                    "original": "1 onion         ",
+                    "subs": []
+                },
+                {
+                    "measure": "ea",
+                    "quantity": "2",
+                    "food": "cloves garlic",
+                    "gram": 272,
+                    "ndb": "11215",
+                    "numericQuantity": "2.0",
+                    "protein": "17.299200000000003g",
+                    "calories": "405.28000000000003kcal",
+                    "sodium": "46.24mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "89.92320000000001g",
+                    "totalFat": "1.36g",
+                    "satFat": "0.24208000000000002g",
+                    "original": "2 cloves garlic         ",
+                    "subs": []
+                },
+                {
+                    "measure": "cup",
+                    "quantity": "1/2",
+                    "food": "rice",
+                    "gram": 100,
+                    "ndb": "20452",
+                    "numericQuantity": "0.500",
+                    "protein": "6.5g",
+                    "calories": "358.0kcal",
+                    "sodium": "1.0mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "79.15g",
+                    "totalFat": "0.52g",
+                    "satFat": "0.14g",
+                    "original": "1/2 cup long grained rice         ",
+                    "subs": [
+                        {
+                            "substituteFor": "Quinoa",
+                            "probability": "0.402701"
+                        },
+                        {
+                            "substituteFor": "Bulgur",
+                            "probability": "0.402365"
+                        },
+                        {
+                            "substituteFor": "Jasmin rice",
+                            "probability": "0.597690"
+                        },
+                        {
+                            "substituteFor": "wheat berries",
+                            "probability": "0.246874"
+                        },
+                        {
+                            "substituteFor": "grated califlower",
+                            "probability": "0.639815"
+                        },
+                        {
+                            "substituteFor": "brown rice",
+                            "probability": ""
+                        }
+                    ]
+                },
+                {
+                    "measure": "cup",
+                    "quantity": "3",
+                    "food": "beef broth",
+                    "gram": 705,
+                    "ndb": "06615",
+                    "numericQuantity": "3.0",
+                    "protein": "0.0g",
+                    "calories": "35.25kcal",
+                    "sodium": "2820.0mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "9.024g",
+                    "totalFat": "0.0g",
+                    "satFat": "0.0g",
+                    "original": "3 cups beef broth        ",
+                    "subs": []
+                },
+                {
+                    "measure": "cup",
+                    "quantity": "1",
+                    "food": "tomato",
+                    "gram": 244,
+                    "ndb": "11559",
+                    "numericQuantity": "1.0",
+                    "protein": "3.2208g",
+                    "calories": "78.08kcal",
+                    "sodium": "36.6mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "17.299599999999998g",
+                    "totalFat": "0.9516g",
+                    "satFat": "0.13419999999999999g",
+                    "original": "1 can diced tomatoes        ",
+                    "subs": []
+                },
+                {
+                    "measure": "cup",
+                    "quantity": "2",
+                    "food": "sauerkraut",
+                    "gram": 284,
+                    "ndb": "43350",
+                    "numericQuantity": "2.0",
+                    "protein": "2.556g",
+                    "calories": "62.48kcal",
+                    "sodium": "874.7199999999999mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "12.354g",
+                    "totalFat": "0.284g",
+                    "satFat": "0.07383999999999999g",
+                    "original": "2 cups sauerkraut         ",
+                    "subs": []
+                },
+                {
+                    "measure": "tsp",
+                    "quantity": "2",
+                    "food": "sweet paprika",
+                    "gram": 4.6,
+                    "ndb": "02028",
+                    "numericQuantity": "2.0",
+                    "protein": "0.65044g",
+                    "calories": "12.972kcal",
+                    "sodium": "3.128mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "2.48354g",
+                    "totalFat": "0.59294g",
+                    "satFat": "0.09844g",
+                    "original": "2 teaspoons sweet paprika        ",
+                    "subs": []
+                },
+                {
+                    "measure": "tsp",
+                    "quantity": "1",
+                    "food": "hot paprika",
+                    "gram": 2.3,
+                    "ndb": "02028",
+                    "numericQuantity": "1.0",
+                    "protein": "0.32522g",
+                    "calories": "6.486kcal",
+                    "sodium": "1.564mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "1.24177g",
+                    "totalFat": "0.29647g",
+                    "satFat": "0.04922g",
+                    "original": "1 teaspoon hot paprika        ",
+                    "subs": []
+                },
+                {
+                    "measure": "ea",
+                    "quantity": "2",
+                    "food": "bay leave",
+                    "gram": 1.2,
+                    "ndb": "02004",
+                    "numericQuantity": "2.0",
+                    "protein": "0.09132000000000001g",
+                    "calories": "3.7560000000000002kcal",
+                    "sodium": "0.276mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "0.89964g",
+                    "totalFat": "0.10031999999999999g",
+                    "satFat": "0.02736g",
+                    "original": "2 bay leaves        ",
+                    "subs": []
+                },
+                {
+                    "measure": "ea",
+                    "quantity": "1",
+                    "food": "pepper",
+                    "gram": 124,
+                    "ndb": "11976",
+                    "numericQuantity": "1.0",
+                    "protein": "2.0584g",
+                    "calories": "33.48kcal",
+                    "sodium": "16.12mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "6.6339999999999995g",
+                    "totalFat": "0.558g",
+                    "satFat": "0.05952g",
+                    "original": "salt and pepper        ",
+                    "subs": []
+                },
+                {
+                    "measure": "cup",
+                    "quantity": "1/4",
+                    "food": "parsley",
+                    "gram": 60,
+                    "ndb": "11297",
+                    "numericQuantity": "0.250",
+                    "protein": "1.782g",
+                    "calories": "21.599999999999998kcal",
+                    "sodium": "33.6mg",
+                    "cholesterol": "0.0mg",
+                    "carbohydrates": "3.798g",
+                    "totalFat": "0.474g",
+                    "satFat": "0.0792g",
+                    "original": "1/4 cup parsley         ",
+                    "subs": []
+                },
+                {
+                    "measure": "ea",
+                    "quantity": "1",
+                    "food": "sour cream",
+                    "gram": 30,
+                    "ndb": "01050",
+                    "numericQuantity": "1.0",
+                    "protein": "0.81g",
+                    "calories": "58.5kcal",
+                    "sodium": "12.0mg",
+                    "cholesterol": "19.8mg",
+                    "carbohydrates": "1.098g",
+                    "totalFat": "5.792999999999999g",
+                    "satFat": "3.606g",
+                    "original": "sour cream         ",
+                    "subs": []
+                }
+            ]
+        },
+        {
+            "instruction": "Heat the oil in the pan.",
+            "lines": []
+        },
+        {
+            "instruction": "Add the onions and saute until tender, about 5-7 minutes.",
+            "lines": []
+        },
+        {
+            "instruction": "Add the garlic and saute until fragrant, about a minute.",
+            "lines": []
+        },
+        {
+            "instruction": "Add the rice and toast for a few minutes.",
+            "lines": []
+        },
+        {
+            "instruction": "Add the broth and deglaze the pan.",
+            "lines": []
+        },
+        {
+            "instruction": "Add the beef, tomatoes, sauerkraut, paprika, bay leaves, salt and pepper and bring to a boil.",
+            "lines": []
+        },
+        {
+            "instruction": "Reduce the heat and simmer until the rice is cooked, about 20 minutes (50 minutes for brown rice).",
+            "lines": []
+        },
+        {
+            "instruction": "Remove from heat and stir in the parsley.",
+            "lines": []
+        },
+        {
+            "instruction": "Serve garnished with sour cream.",
+            "lines": []
+        }
+    ],
+    "nutrients": {
+        "_id": "",
+        
+        "gramsPerPortion": 4.09,
+        "energy": "394.16556999999995 ",
+        "adj_protein": "0.0 ",
+        "alcohol": "0.0 ",
+        "caffeine": "0.0 ",
+        "calcium": "33.7834 ",
+        "carbohydrate": "9.7342 ",
+        "cholesterol": "13.623790000000001 ",
+        "desc": "",
+        "fgId": "",
+        "fiber": "1.13293 ",
+        "glucose": "0.13088 ",
+        "iron": "1.04704 ",
+        "lactose": "0.0 ",
+        "magnesium": "13.76285 ",
+        "monoFat": "1.9141199999999998 ",
+        "polyFat": "0.32311 ",
+        "protein": "4.74031 ",
+        "satFat": "1.51739 ",
+        "sodium": "168.10309 ",
+        "sucrose": "0.06544 ",
+        "sugars": "1.0184099999999998 ",
+        "theobromine": "0.0 ",
+        "transFat": "0.16768999999999998 ",
+        "vitA": "518.6242699999999 ",
+        "vitC": "15.272059999999998 ",
+        "vitD": "0.17587 ",
+        "totalFat": "4.23724 ",
+        "water": "0.0 ",
+        "fructose": "0g",
+        "calories": "94.22133 ",
+        "starch": "0.0 "
+    },
+    "parseError": false,
+    "parentId": "5778dd68e4b0592f499ac582"
+}

@@ -1,0 +1,59 @@
+{
+                
+                "probability" : 0.154073,
+                "substitutionRule" : "wheat berries for white rice",
+                "lowerFat" : false,
+                "lowerCarb" : false,
+                "lowerSodium" : false,
+                "higherFiber" : false,
+                "reducedCalories" : false,
+                "higherProtein" : false,
+                "addedIngredients" : [
+                        "wheatberries"
+                ],
+                "reducedIngredients" : [
+                        "rice"
+                ],
+                "carbohydrate" : {
+                        "name" : "calories",
+                        "change" : -5.998,
+                        "percentChange" : 0.976,
+                        "changeType" : "NOCHANGE"
+                },
+                "totalFat" : {
+                        "name" : "totalFat",
+                        "change" : 0.246,
+                        "percentChange" : 1.034,
+                        "changeType" : "NOCHANGE"
+                },
+                "protein" : {
+                        "name" : "protein",
+                        "change" : 1.383,
+                        "percentChange" : 1.201,
+                        "changeType" : "BETTER"
+                },
+                "satFat" : {
+                        "name" : "satFat",
+                        "change" : 0.038,
+                        "percentChange" : 1.014,
+                        "changeType" : "NOCHANGE"
+                },
+                "sodium" : {
+                        "name" : "sodium",
+                        "change" : 2.372,
+                        "percentChange" : 1.004,
+                        "changeType" : "NOCHANGE"
+                },
+                "sugars" : {
+                        "name" : "sugars",
+                        "change" : 0.079,
+                        "percentChange" : 1.019,
+                        "changeType" : "NOCHANGE"
+                },
+                "fiber" : {
+                        "name" : "fiber",
+                        "change" : 1.924,
+                        "percentChange" : 2.615,
+                        "changeType" : "BETTER"
+                }
+        }
