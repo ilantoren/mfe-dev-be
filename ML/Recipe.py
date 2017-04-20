@@ -13,6 +13,7 @@ class Recipe:
     self.attrs = {}
     self.id = self.dic['_id'].__str__()
     self.title = self.dic['title'] if 'title' in self.dic else 'Untitled'
+    self.has_title = 'title' in self.dic
     self.tags = {}
     if 'tags' in dic:
       for t in dic['tags']:
@@ -58,13 +59,17 @@ class Recipe:
   def getTitle(self):
     return self.title
 
-  def getTags(self):
-    return self.dic['tags'] if 'tags' in self.dic else []
+  def hasTitle(self):
+    return self.has_title
 
   def getTags(self):
     return self.tags
 
   def getTagProb(self, t):
+
+    # Currently, tagging is done only by title.  therefore no title = no info
+    if not self.has_title: return None
+
     if not t in self.tags: return 0.0
     tag_info = self.tags[t]
     if 'probability' in tag_info: return float(tag_info['probability'])

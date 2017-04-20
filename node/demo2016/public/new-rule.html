@@ -1,0 +1,74 @@
+<!--<div style="width:50%">-->
+<div>
+<div class="form-group">
+    <label for="origin">Origin:</label>
+    <input type="text" class="form-control" id="origin" ng-model="rule.origin" style="width:380px;">
+
+
+    <label for="infolink">Infolink:</label>
+    <input type="text" class="form-control" id="infolink" ng-model="rule.infolink" style="width:380px;">
+
+    <div class="row" ng-repeat="ruleRow in rule.rules">
+        <div class="col-sm-1" style="width:200px;">
+        <label for="function">Condition Function:</label>
+            <select id="function" class="form-control"
+                    ng-options="func for func in functions"
+                    ng-model="ruleRow.func"></select>
+        </div>
+
+        <div class="col-sm-1">
+        <label for="tags">Condition Tags:</label>
+            <div id="tags" ng-dropdown-multiselect="" options="tags" selected-model="ruleRow.tags" extra-settings="tagsSettings"></div>
+        </div>
+
+        <div class="col-sm-1">
+        <label for="ruleArg">Operation</label>
+            <select id="ruleArg" class="form-control"
+                    ng-options="rule for rule in operations"
+                    ng-model="ruleRow.operation"></select>
+        </div>
+
+        <div class="col-sm-1">
+            <label for="val">Value</label>
+            <input type="text" class="form-control" id="val" ng-model="ruleRow.val" style="width:100%;">
+        </div>
+
+        <div class="col-sm-1">
+            <div class="row" style="padding-top: 20px;">
+            <button type="button" class="btn btn-default btn-sm" ng-click="addRuleRow()">Add</button>
+            <button type="button" class="btn btn-default btn-sm" ng-click="removeRuleRow(ruleRow)">Remove</button>
+            </div>
+        </div>
+    </div>
+
+
+    <label for="probability">Probability:</label>
+    <input type="text" class="form-control" id="probability" ng-model="rule.probability" style="width:80px;">
+</div>
+
+<div class="row" style="padding-top: 10px;">
+    <div class="col-sm-3">
+        <button type="button" class="btn btn-default btn-sm" ng-click="addSource()">Add Source</button>
+        <div>
+            <div ui-grid="sourcesGridOptions" style="height: 400px; width:100%;"/>
+        </div>
+    </div>
+
+
+<div class="col-sm-3" style="padding-left: 20px; width:800px">
+    <button type="button" class="btn btn-default btn-sm" ng-click="addTarget()">Add Target</button>
+    <div>
+        <div ui-grid="targetGridOptions" style="height: 400px;  width:100%;"/>
+    </div>
+</div>
+</div>
+<!--</div>-->
+<!--</div>-->
+
+<div class="row" style="padding-top: 10px;">
+    <div class="col-sm-1">
+        <button type="button" class="btn btn-default btn-sm" ng-click="save()">Save</button>
+        <button type="button" class="btn btn-default btn-sm" ng-click="back()">Back</button>
+    </div>
+</div>
+</div>

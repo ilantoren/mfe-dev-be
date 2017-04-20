@@ -44,7 +44,8 @@ def clean_str(s):
   return ret
 
 def tokenizeInstructionAnnotation(s):
-  s = re.sub(r'[,;:!(\-)/\"\'*+#%$&=]', ' ', s)
+
+  s = re.sub(r'[,;:!(\-)/\"\'*+#$&=]', ' ', s)
   s = re.sub(r'<[a-zA-Z/]+>?', ' ', s) # this shouldnt happen, but due to parsing problems I saw it!
   s = re.sub(r'[<>]', ' ', s)
   s = re.sub(r'\.', ' </s> ', s)

@@ -12,6 +12,7 @@ from optparse import OptionParser
 from bson.objectid import ObjectId
 import re
 import pprint
+import enchant # PyEnchant - used for checking that words are actually English words
 	
 EPS=0.0001
 INFINITY = 9999999999
@@ -99,17 +100,22 @@ def writeGeneralWordFrequenciesTop5000(rdb, file_, denominator):
     table=table) 
 
   
-def writeInstructionAnnotationWordFrequencies(rdb):
+def writeInstructionAnnotationWordFrequencies(rdb, min_freq=4, field="sourceText"):
   recipes = rdb.findRecipeAnnotation({})
+  d = enchant.Dict("en_US")
   freqs = {}
   i = 0
   tot = 0.0
   for r in recipes:
-    if not 'sourceText' in r: continue
-    text = IOTools.tokenizeInstructionAnnotation(r['sourceText'])
+    if not field in r: continue
+    text = IOTools.tokenizeInstructionAnnotation(r[field])
     for token in text:
+      if not d.check(token): continue # Not an English word
       token = token.lower()
-      if re.search('[^a-z]', token) is not None: continue
+      if re.search('[^a-z]', token) is not None: 
+        if len(token) < 4: continue
+        if token[0]!='{' or token[1]!='%' or token[-1]!='}' or token[-2]!='%':
+          continue
       if not token in freqs:
         freqs[token] = 1
       else:
@@ -118,14 +124,17 @@ def writeInstructionAnnotationWordFrequencies(rdb):
     i = i + 1
     sys.stdout.write('\r%d'% i)
   sys.stdout.write('\n')
-  table = []
-  for key in freqs: 
-    table.append((key.lower(), freqs[key] / tot))
+  to_del = []
+  for key in freqs:
+    if freqs[key] < min_freq:
+      to_del.append(key)
+  for key in to_del: del freqs[key]
+  tot = sum(freqs.values())+.0
   print 'tot = ', tot
   rdb.writeStats(
     name=INSTRUCTIONS_WORD_FREQUENCIES,
     description='Word frequency in recipe instructions',
-    table=table) 
+    table=freqs) 
   
 
 def sanityCheck(rdb):
@@ -135,13 +144,16 @@ def sanityCheck(rdb):
   inst = rdb.getStats(INSTRUCTIONS_WORD_FREQUENCIES)
   output = []
 
+  tot_inst = sum(inst.values())+.0
+
   for word in inst:
     if not word in gen:
-      output.append((INFINITY, inst[word], word))
+      output.append((-INFINITY, inst[word], 0.0, word))
       continue
-    output.append((inst[word]/gen[word], inst[word], gen[word], word))
+    output.append((-inst[word]/(tot_inst*gen[word]), inst[word], gen[word], word))
   output.sort()
-  pp.pprint(output)
+  for i in range(len(output)):   
+    print ("%d %f %s %f" % (i, output[i][1], IOTools.clean_str(output[i][3]), -output[i][0]))
 
 
 
@@ -149,22 +161,28 @@ if __name__ == "__main__":
   parser = OptionParser()
   parser.add_option("--wff", "--word_frequency_file", dest="wff", help="Location of word frequency file", default="data/word_frequency_5000.html", metavar="WORD_FREQUENCY_FILE")
   parser.add_option("--denom", "--denominator", dest="denominator", help="Denominator for converting frequencies to probabilities in file", default="450000000.0", metavar="DENOMINATOR")
+  parser.add_option("--inst", "--instructions", dest="instructions", help="Obtain instructions annotation stats", default="True", metavar="INSTRUCTIONS")
+  parser.add_option("--instmin", "--instructions_min", dest="instructions_min", help="Minimum number of times a word has to appear in corpus in order to be included in instructions stats", default="4", metavar="INSTRUCTIONS_MIN")
+  parser.add_option("--instfield", "--instructions_field", dest="instructions_field", help="Which field in the instructions records to use for stats? Default: sourceText", default="sourceText", metavar="INSTRUCTIONS_FIELD")
+  parser.add_option("--st", "--sanity_test", dest="sanity_test", help="Sanity test (after execution - will disable all other tasks)", default="False", metavar="SANITY_TEST")
   rdb = IOTools.RecipeDB(option_parser = parser)
   (options, args) = parser.parse_args()
 
-  if 'test' in sys.argv:
+  if eval(options.sanity_test):
     sanityCheck(rdb)
     sys.exit(0)
 
+  if eval(options.instructions):
+    print "Getting word statistics from instructions..."
+    writeInstructionAnnotationWordFrequencies(rdb, min_freq = eval(options.instructions_min), field=options.instructions_field)
   print "Collecting ingredient statistics..."
   writeIngredientListStats(rdb)
   print "Collecting ingredient bigram statistics..."
   writeIngredientListBigram(rdb)
   print "Getting word statistics from general text (from file)..."
   writeGeneralWordFrequenciesTop5000(rdb, file_=options.wff, denominator = float(options.denominator))
-  print "Getting word statistics from instructions..."
 
   writeIngredientListBigram(rdb)
-#  writeInstructionAnnotationWordFrequencies(rdb)
+  
 
 

@@ -28,7 +28,7 @@ public class InstructionAnnotation implements Serializable{
     private String id;
     
     private String recipeId;
-    
+    private String language;
     private String sourceText;
     private String annotated;
     private String replacedText;
@@ -87,7 +87,16 @@ public class InstructionAnnotation implements Serializable{
     public void setReplacedText(String replacedText) {
         this.replacedText = replacedText;
     }
+    
 
-    public InstructionAnnotation() {}
+    public String getLanguage() {
+		return language;
+	}
+
+	public void setLanguage(String language) {
+		this.language = language;
+	}
+
+	public InstructionAnnotation() {}
     
 }

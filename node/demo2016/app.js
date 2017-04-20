@@ -29,8 +29,10 @@ var app = express();
 
 var mappedEntityDao = require('./dao/mapped-entity-dao');
 var recipeDao = require('./dao/recipe-dao');
+var rulesDao = require('./dao/rules-dao');
 mappedEntityDao.app = app;
 recipeDao.app = app;
+rulesDao.app = app;
 
 
 var mongoCon = require('mongodb').MongoClient;
@@ -56,7 +58,7 @@ app.use('/controller', controller);
 var appEnv = cfenv.getAppEnv();
 
 // start server on the specified port and binding host
-app.listen(appEnv.port, '0.0.0.0', function() {
+app.listen(3000, '0.0.0.0', function() {
     var mongoCfg = config.mongo;
     mongoCon.connect('mongodb://' + mongoCfg.url + '/' + mongoCfg.db)
         .then(function(db) {
