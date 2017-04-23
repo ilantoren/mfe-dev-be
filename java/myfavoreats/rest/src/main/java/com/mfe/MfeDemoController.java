@@ -691,6 +691,7 @@ public class MfeDemoController {
 		return new DropDownTitle(sourceId, targetId, description);
 	}
 
+	/*
 	@RequestMapping(method = RequestMethod.GET, value = "/admin/prepare")
 	public String calculateAllRecipes() {
 		ArrayList<RecipePOJO> buffer = new ArrayList<>();
@@ -710,6 +711,7 @@ public class MfeDemoController {
 		recipes.save(buffer);
 		return "DONE";
 	}
+	
 	
 	@RequestMapping( method = RequestMethod.PUT, value = "/admin/substitutions")
 	public void processAllSubstitutions() {
@@ -732,7 +734,7 @@ public class MfeDemoController {
 		}
 		return pojo;
 	}
-
+*/
 	@RequestMapping(method = RequestMethod.GET, value = "/substitutions/recipe/{recipeId}")
 	@ResponseBody
 	public Substitutions findSubstitutionsByRecipeid(@PathVariable("recipeId") String recipeId) {
