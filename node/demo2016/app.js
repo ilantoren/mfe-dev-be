@@ -61,11 +61,16 @@ var appEnv = cfenv.getAppEnv();
 log.info(JSON.stringify(appEnv ) );
 log.info( getServiceInfo() );
 var mongoInstance = appEnv.getService("mongo-instance");
-var mongoUrl = JSON.stringify( mongoInstance.credentials.credential );
+var mongoUrl = null; 
 // start server on the specified port and binding host
 app.listen(appEnv.port, '0.0.0.0', function() {
    if ( appEnv ) {
-       log.info( mongoUrl );
+       try {
+        mongoUrl  = JSON.stringify( mongoInstance.credentials.credential );
+        log.info( mongoUrl );
+    }catch ( exception ) {
+        log.warn("invalid appeEnv object");
+    }
    }
    else {
        var mongoCfg = config.mongo;
