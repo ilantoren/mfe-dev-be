@@ -24,6 +24,7 @@ var host = appEnv.url;
 var service = appEnv.getService("mfe-dev-be")
 
 if ( service === null) {
+        log.info( "mfe-dev-be was not found in bound services");
 	var resthost = "localhost";
 	var restport = ":8080";
 }else {
