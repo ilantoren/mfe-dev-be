@@ -21,13 +21,13 @@ var client = new Client();
 var host = appEnv.url;
 
 
-var service = appEnv.getService("mfe-rest-service")
+var service = appEnv.getService("mfe-dev-fe")
 
-if ( service == null) {
+if ( service === null) {
 	var resthost = "localhost";
 	var restport = ":8080";
 }else {
-	var resthost = "mfe-dev-be.mybluemix.net";
+	var resthost = service.url;
 	var restport = ""
 }
 

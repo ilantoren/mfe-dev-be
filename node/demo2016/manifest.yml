@@ -8,4 +8,4 @@ applications:
   disk_quota: 1024M
   services:
   - mfe-rest-service
-  - myfavoreats-develop
+  - mongo-instance
