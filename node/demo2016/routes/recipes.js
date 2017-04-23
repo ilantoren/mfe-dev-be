@@ -28,8 +28,8 @@ if ( service === null) {
 	var restport = ":8080";
 }else {
     try {
-	var resthost = JSON.stringfy(service.credentials.url);
-	var restport = ""
+	var resthost = JSON.stringfy(service.url);
+	var restport = "";
     }
     catch( err ) {
         log.error(err);
