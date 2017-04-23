@@ -1,3 +1,4 @@
+"use strict"
 var express = require('express');
 var router = express.Router();
 var mappedEntityDao = require('../dao/mapped-entity-dao');
