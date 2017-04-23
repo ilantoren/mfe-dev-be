@@ -40,8 +40,8 @@ public interface RecipeRepository extends MongoRepository<RecipePOJO, String> {
 	List<RecipePOJO> findSubstituteTitleOld();
 	
 	
-	@Query( value="{}",fields="{title:1, urn:1 , site:1}" )
-	Stream<RecipePOJO> findSubstituteTitle(Pageable pageable);
+	@Query( value="{}",fields="{title:1, urn:1 ,website:1,  site:1, photos:1, categories:1}" )
+	Stream<RecipePOJO> findRecipeTitles(Pageable pageable);
 	
 	@Query( "{ $or: [{ id: ?0 }, {parentId: ?0} ] }" )
 	List<RecipePOJO> findParentAndChildren( String id );

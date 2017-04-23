@@ -258,9 +258,9 @@ public class MfeDemoController {
 		Set<String> unique = new HashSet<>();
 		List<RecipeTitle> titleList = new ArrayList<>();
 		PageRequest pageable = new PageRequest(1, TITLE_LIMIT, Direction.DESC, "categories");
-		try (Stream<DemoRecipeSearch> stream = imageRepository.findSubstituteTitle(pageable)) {
-			List<RecipeTitle> titleListPart2 = stream.filter(x -> unique.add(x.getTitle())).limit(900)
-					.map(x -> new RecipeTitle(x.getRecipeId(), x.getTitle(), x.getUrl(), x.getSite(), x.getImageUrl()))
+		try (Stream<RecipePOJO> stream = recipes.findRecipeTitles(pageable) ){
+			List<RecipeTitle> titleListPart2 = stream.filter(x -> unique.add(x.getTitle())).limit(500)
+					.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos()))
 					.collect(Collectors.toList());
 			titleList.addAll(titleListPart2);
 		}
