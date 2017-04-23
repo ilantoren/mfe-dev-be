@@ -67,8 +67,12 @@ app.listen(appEnv.port, '0.0.0.0', function() {
    if ( appEnv ) {
        log.info( mongoUrl );
    }
-   var mongoCfg = config.mongo;
-    mongoCon.connect('mongodb://' + mongoCfg.url + '/' + mongoCfg.db)
+   else {
+       var mongoCfg = config.mongo;
+       mongoUrl = 'mongodb://' + mongoCfg.url + '/' + mongoCfg.db;
+   }
+   
+    mongoCon.connect(mongoUrl)
         .then(function(db) {
             log.info("Created promised Mongo Connection");
             app.locals.db  = db;
