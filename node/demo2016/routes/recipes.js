@@ -27,6 +27,7 @@ if ( service === null) {
 	var resthost = "localhost";
 	var restport = ":8080";
 }else {
+    log.info( "MFE-DEV-BE: " + JSON.stringify( service ));
     try {
 	var resthost = JSON.stringfy(service.url);
 	var restport = "";
