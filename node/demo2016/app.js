@@ -60,9 +60,16 @@ app.use('/controller', controller);
 var appEnv = cfenv.getAppEnv();
 log.info(JSON.stringify(appEnv ) );
 log.info( getServiceInfo() );
-
+var mongoUrl = appEnv.getServiceURL("mongo-instance", {
+    pathname: "database",
+    protocol: "mongodb:",
+    auth:     ["username", "password"]
+});
 // start server on the specified port and binding host
 app.listen(appEnv.port, '0.0.0.0', function() {
+   if ( appEnv ) {
+       log.info( mongoUrl );
+   }
    var mongoCfg = config.mongo;
     mongoCon.connect('mongodb://' + mongoCfg.url + '/' + mongoCfg.db)
         .then(function(db) {
@@ -73,38 +80,38 @@ app.listen(appEnv.port, '0.0.0.0', function() {
 });
 
 function getServiceInfo() {
-  var serviceA = AppEnv.getService("ServiceA")
-  var serviceB = AppEnv.getService("ServiceB")
-  var serviceX = AppEnv.getService(/Service.*/) || {name: "(not bound)"}
-  var services = AppEnv.getServices()
+  var serviceA = AppEnv.getService("ServiceA");
+  var serviceB = AppEnv.getService("ServiceB");
+  var serviceX = AppEnv.getService(/Service.*/) || {name: "(not bound)"};
+  var services = AppEnv.getServices();
 
-  var output = []
-  output.push("  isLocal?        - " + yesNo(AppEnv.isLocal))
-  output.push("  ServiceA bound? - " + yesNo(serviceA))
-  output.push("  ServiceB bound? - " + yesNo(serviceB))
-  output.push("  /Service.*/     - " + serviceX.name)
+  var output = [];
+  output.push("  isLocal?        - " + yesNo(AppEnv.isLocal));
+  output.push("  ServiceA bound? - " + yesNo(serviceA));
+  output.push("  ServiceB bound? - " + yesNo(serviceB));
+  output.push("  /Service.*/     - " + serviceX.name);
 
-  output.push("bound services:")
+  output.push("bound services:");
 
-  var someServices = false
+  var someServices = false;
   for (var serviceName in services) {
-    var service = services[serviceName]
-    var creds   = JSON.stringify(service.credentials)
+    var service = services[serviceName];
+    var creds   = JSON.stringify(service.credentials);
 
-    output.push("  " + service.label + ": " + service.name + ": " + creds)
+    output.push("  " + service.label + ": " + service.name + ": " + creds);
 
-    someServices = true
+    someServices = true;
   }
 
   if (!someServices) {
-    output.push("  (none)")
+    output.push("  (none)");
   }
-  return output.join("\n")
+  return output.join("\n");
 }
 
 //------------------------------------------------------------------------------
 function yesNo(bool) {
-  return bool ? "yes" : "no"
+  return bool ? "yes" : "no";
 }
 
 //-----------------------------------------------------------------------------
