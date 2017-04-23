@@ -60,11 +60,7 @@ app.use('/controller', controller);
 var appEnv = cfenv.getAppEnv();
 log.info(JSON.stringify(appEnv ) );
 log.info( getServiceInfo() );
-var mongoUrl = appEnv.getServiceURL("mongo-instance", {
-    pathname: "database",
-    protocol: "protocol",
-    auth:     ["username", "password"]
-});
+var mongoUrl = appEnv.getService("mongo-instance").credential;
 // start server on the specified port and binding host
 app.listen(appEnv.port, '0.0.0.0', function() {
    if ( appEnv ) {
