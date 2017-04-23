@@ -29,12 +29,15 @@ if ( service === null) {
 	var restport = ":8080";
 }else {
     log.info( "MFE-DEV-BE: " + JSON.stringify( service ));
+    var credentials = service.credentials;
+    log.info( "Credentials: " + JSON.stringify( credentials ));
+    
     try {
-	var resthost = JSON.stringfy(service.url);
+	var resthost = JSON.stringify( credentials.url );
 	var restport = "";
     }
     catch( err ) {
-        log.error(err);
+        log.error("error parsing mfe-dev-be credentials");
     }
 }
 log.info( 'REST BACKEND IS AT  http://'+ resthost + restport);
