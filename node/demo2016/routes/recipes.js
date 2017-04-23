@@ -27,8 +27,13 @@ if ( service === null) {
 	var resthost = "localhost";
 	var restport = ":8080";
 }else {
-	var resthost = service.url;
+    try {
+	var resthost = JSON.stringfy(service.credentials.url);
 	var restport = ""
+    }
+    catch( err ) {
+        log.error(err);
+    }
 }
 log.info( 'REST BACKEND IS AT  http://'+ resthost + restport);
 client.registerMethod("recipesChangedChild",  "http://"+ resthost + restport + "/recipes/changed/child/${id}", "GET");
