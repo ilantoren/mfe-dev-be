@@ -21,7 +21,7 @@ var client = new Client();
 var host = appEnv.url;
 
 
-var service = appEnv.getService("mfe-dev-fe")
+var service = appEnv.getService("mfe-dev-be")
 
 if ( service === null) {
 	var resthost = "localhost";
@@ -30,7 +30,7 @@ if ( service === null) {
 	var resthost = service.url;
 	var restport = ""
 }
-
+log.info( 'REST BACKEND IS AT  http://'+ resthost + restport);
 client.registerMethod("recipesChangedChild",  "http://"+ resthost + restport + "/recipes/changed/child/${id}", "GET");
 client.registerMethod("recipes",              "http://"+ resthost + restport + "/recipes", "GET");
 client.registerMethod("recipe",               "http://"+ resthost + restport + "/recipe/${id}", "GET");
