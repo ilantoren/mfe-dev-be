@@ -215,6 +215,7 @@ public class MfeDemoController {
 	@RequestMapping(method = RequestMethod.GET, value = "/recipes/search/{word}")
 	public List<RecipeTitle> searchRecipes(@PathVariable("word") String word) {
 		Date start = new Date();
+		log.info( "Search started for recipes with phrase '" + word + "'");
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny(word);
 		Query query = TextQuery.queryText(criteria).sortByScore().with(new PageRequest(0, TITLE_LIMIT*2));
@@ -224,6 +225,7 @@ public class MfeDemoController {
 		//Set<String> uniqueNames = new HashSet<>();
 		Predicate<RecipePOJO> isValidRecipe = (a) -> a.getTitle() != null && a.getPhotos() != null && a.getUrn() != null ;
 		List<RecipeTitle> result = null;
+	
 		result = pojos.stream()
 				.filter ( isValidRecipe )
 				.map    (a -> new RecipeTitle(a)).collect(Collectors.toList());
