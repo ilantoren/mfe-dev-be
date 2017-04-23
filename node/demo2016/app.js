@@ -62,7 +62,7 @@ log.info(JSON.stringify(appEnv ) );
 log.info( getServiceInfo() );
 var mongoUrl = appEnv.getServiceURL("mongo-instance", {
     pathname: "database",
-    protocol: "mongodb:",
+    protocol: "protocol",
     auth:     ["username", "password"]
 });
 // start server on the specified port and binding host
