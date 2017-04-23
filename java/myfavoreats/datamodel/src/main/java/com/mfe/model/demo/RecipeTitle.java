@@ -66,7 +66,21 @@ public class RecipeTitle implements Serializable {
     }
 
 	public RecipeTitle(RecipePOJO a) {
-		new RecipeTitle( a.getId(), a.getTitle(), a.getUrn(), a.getSite(), a.getPhotos() );
+		id = a.getId();
+		title = a.getTitle();
+		
+		if ( a.getWebsite() == null) {
+			site = a.getSite();
+		}else {
+			site = a.getWebsite();
+		}
+		
+		
+		if (a.getUrn() != null)
+			this.urn = a.getUrn().replaceAll("\\s", "");
+
+		if (a.getPhotos() != null)
+			this.imageUrl = a.getPhotos().replaceAll("\\s", "");
 	}
 
 	public String getSite() {

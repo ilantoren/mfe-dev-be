@@ -5,3 +5,4 @@ bower_components/
 *~
 target/*
 *~
+/node/demo2016/nbproject/private/

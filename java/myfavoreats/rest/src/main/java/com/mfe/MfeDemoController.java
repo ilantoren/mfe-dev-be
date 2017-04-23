@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -20,6 +21,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,6 +41,7 @@ import org.springframework.data.mongodb.core.ScriptOperations;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.TextQuery;
@@ -210,16 +214,26 @@ public class MfeDemoController {
 
 	@RequestMapping(method = RequestMethod.GET, value = "/recipes/search/{word}")
 	public List<RecipeTitle> searchRecipes(@PathVariable("word") String word) {
+		Date start = new Date();
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny(word);
-
-		Query query = TextQuery.queryText(criteria).sortByScore().with(new PageRequest(0, TITLE_LIMIT));
+		Query query = TextQuery.queryText(criteria).sortByScore().with(new PageRequest(0, TITLE_LIMIT*2));
 
 		List<RecipePOJO> pojos = mongoOperations.find(query, RecipePOJO.class);
-		Set<String> ids = new HashSet<>();
-		Set<String> uniqueNames = new HashSet<>();
-		List<RecipeTitle> result = pojos.stream().filter(x -> isUniqueSearchResult(x, ids, uniqueNames))
-				.map(a -> new RecipeTitle(a)).collect(Collectors.toList());
+		//Set<String> ids = new HashSet<>();
+		//Set<String> uniqueNames = new HashSet<>();
+		Predicate<RecipePOJO> isValidRecipe = (a) -> a.getTitle() != null && a.getPhotos() != null && a.getUrn() != null ;
+		List<RecipeTitle> result = null;
+		result = pojos.stream()
+				.filter ( isValidRecipe )
+				.map    (a -> new RecipeTitle(a)).collect(Collectors.toList());
+		Double elapsed = BigDecimal.valueOf( new Date().getTime() - start.getTime() ).divide( BigDecimal.valueOf(1000D), 3, BigDecimal.ROUND_DOWN ).doubleValue();
+		String message = String.format( "search term: '%s'  time:  %03.3f seconds   recipes: %d,  recipe titles: %d",
+				  word
+				, elapsed
+				, pojos.size() 
+				, result.size() );
+		log.info( message);
 		return result;
 	}
 
@@ -243,7 +257,7 @@ public class MfeDemoController {
 		List<RecipeTitle> titleList = new ArrayList<>();
 		PageRequest pageable = new PageRequest(1, TITLE_LIMIT, Direction.DESC, "categories");
 		try (Stream<DemoRecipeSearch> stream = imageRepository.findSubstituteTitle(pageable)) {
-			List<RecipeTitle> titleListPart2 = stream.filter(x -> unique.add(x.getTitle())).limit(300)
+			List<RecipeTitle> titleListPart2 = stream.filter(x -> unique.add(x.getTitle())).limit(900)
 					.map(x -> new RecipeTitle(x.getRecipeId(), x.getTitle(), x.getUrl(), x.getSite(), x.getImageUrl()))
 					.collect(Collectors.toList());
 			titleList.addAll(titleListPart2);
@@ -260,13 +274,13 @@ public class MfeDemoController {
 		log.info("Searching for substitutions from " + sourceId + "  to  " + targetId);
 		List<RecipePOJO> pojos = findRecipesUsingSubstitute(sourceId, targetId);
 		pojos.sort(new RecipeComparator());
-		Set<String> uniqueTitle = new HashSet<>();
-		List<RecipeTitle> result = pojos.stream().filter(x -> uniqueTitle.add(x.getTitle()))
+		//Set<String> uniqueTitle = new HashSet<>();
+		List<RecipeTitle> result = pojos.stream()
 				.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos()))
 				.collect(Collectors.toList());
 		Date end = new Date();
 		long millis = end.getTime() - start.getTime();
-		log.info("/recipes/substitute/" + description + " results: " + pojos.size() + " time " + millis);
+		log.info("/recipes/substitute/" + description + " results: " + pojos.size() + " time " + millis + " ms");
 		return result;
 
 	}
@@ -275,10 +289,11 @@ public class MfeDemoController {
 
 		log.debug("findRecipesWithSubstitute  " + sourceId + "  " + targetId);
 		List<String> recipeIdList = substitutionsRepository.findBySourceAndTarget(sourceId, targetId)
+				.limit(TITLE_LIMIT)
 				.map(x -> x.getRecipeId()).collect(Collectors.toList());
 
-		String ids = recipeIdList.stream().map(d -> d.toString()).collect(Collectors.joining(", "));
-		log.info("IDS: " + ids);
+		//String ids = recipeIdList.stream().map(d -> d.toString()).collect(Collectors.joining(", "));
+		//log.info("IDS: " + ids);
 
 		// Query query = query( where("id" ).in(
 		// recipeIdList)).limit(TITLE_LIMIT);
@@ -692,6 +707,16 @@ public class MfeDemoController {
 		});
 		recipes.save(buffer);
 		return "DONE";
+	}
+	
+	@RequestMapping( method = RequestMethod.PUT, value = "/admin/substitutions")
+	public void processAllSubstitutions() {
+		recipes.streamAllRecipes().forEachOrdered(pojo -> {
+			
+			log.info( pojo.getId() + "  " + pojo.getTitle() );
+			recipeSubstitutionService.getRecipeAndSubstitute( pojo );
+			
+		});		
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/recipe/nutrition/{id}")

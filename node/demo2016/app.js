@@ -13,6 +13,8 @@ var application_root = __dirname,
 // cfenv provides access to your Cloud Foundry environment
 // for more info, see: https://www.npmjs.com/package/cfenv
 var cfenv = require('cfenv');
+// get cloud foundry appEnv
+var AppEnv = cfenv.getAppEnv()
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
@@ -56,10 +58,12 @@ app.use('/controller', controller);
 
 // get the app environment from Cloud Foundry
 var appEnv = cfenv.getAppEnv();
+log.info(JSON.stringify(appEnv ) );
+log.info( getServiceInfo() );
 
 // start server on the specified port and binding host
-app.listen(3000, '0.0.0.0', function() {
-    var mongoCfg = config.mongo;
+app.listen(appEnv.port, '0.0.0.0', function() {
+   var mongoCfg = config.mongo;
     mongoCon.connect('mongodb://' + mongoCfg.url + '/' + mongoCfg.db)
         .then(function(db) {
             log.info("Created promised Mongo Connection");
@@ -67,3 +71,40 @@ app.listen(3000, '0.0.0.0', function() {
         });
     log.info("server starting on " + appEnv.url);
 });
+
+function getServiceInfo() {
+  var serviceA = AppEnv.getService("ServiceA")
+  var serviceB = AppEnv.getService("ServiceB")
+  var serviceX = AppEnv.getService(/Service.*/) || {name: "(not bound)"}
+  var services = AppEnv.getServices()
+
+  var output = []
+  output.push("  isLocal?        - " + yesNo(AppEnv.isLocal))
+  output.push("  ServiceA bound? - " + yesNo(serviceA))
+  output.push("  ServiceB bound? - " + yesNo(serviceB))
+  output.push("  /Service.*/     - " + serviceX.name)
+
+  output.push("bound services:")
+
+  var someServices = false
+  for (var serviceName in services) {
+    var service = services[serviceName]
+    var creds   = JSON.stringify(service.credentials)
+
+    output.push("  " + service.label + ": " + service.name + ": " + creds)
+
+    someServices = true
+  }
+
+  if (!someServices) {
+    output.push("  (none)")
+  }
+  return output.join("\n")
+}
+
+//------------------------------------------------------------------------------
+function yesNo(bool) {
+  return bool ? "yes" : "no"
+}
+
+//-----------------------------------------------------------------------------
