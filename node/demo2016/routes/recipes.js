@@ -33,7 +33,7 @@ if ( service === null) {
     log.info( "Credentials: " + JSON.stringify( credentials ));
     
     try {
-	var resthost = JSON.stringify( credentials.url );
+	var resthost = credentials.url;
 	var restport = "";
     }
     catch( err ) {
