@@ -33,7 +33,7 @@ if ( service === null) {
     log.info( "Credentials: " + JSON.stringify( credentials ));
     
     try {
-	var resthost = credentials.url;
+	var resthost = 'mfe-dev-be.mybluemix.net';
 	var restport = "";
     }
     catch( err ) {
