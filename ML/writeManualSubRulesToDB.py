@@ -21,6 +21,12 @@ ZUCCHINI_PASTA_INSTRUCTIONS = '''1. Cut lengthwise slices from zucchini using a 
 
 CHICKPEA_FLOUR_IN_PANCAKE_NOTE = '''Equal combination chickpea flour and almong flour recommended.'''
 ALMOND_FLOUR_IN_QUICHE_INSTRUCTIONS = '''Recommended to adjust butter amount to 40 grams per cup of almond flour, and oil amount to 1/8 cup per cup of almond flour.'''
+SWEET_POTATO_IN_SMOOTHIE_MORE_INFO = '''Bake sweet potato in a preheated oven or microwave until tender.  Peel and cool. '''
+YOGURT_FOR_BANANA_IN_SMOOTHIE_MORE_INFO = '''Cube and freeze.'''
+MILK_FOR_CREME_FRAICHE_MASHED_POTATO_MOREINFO = '''One cup creme fraiche per 3 pounds of potatoes'''
+MILK_FOR_WATER_MASHED_POTATO_MOREINFO = '''Use the water potatoes were cooked in'''
+EGG_FOR_ARROWROOT_PUDDING_CUSTARD_MOREINFO = '''Mix 1tbps arrowroot and 1 tablespoon oil and 1/4 cup water'''
+EGG_FOR_POTATO_FLOUR_PATTY_MOREINFO = '''Combine potato flour with the recipe's liquid. Add oatmeal to the recipe's dry ingredients.'''
 
 parser = OptionParser()
 rdb = IOTools.RecipeDB(option_parser = parser)
@@ -386,8 +392,306 @@ rules = [
     "type":"ListSinglePick",
     "sources":resolveEntities({"white flour":{"qty":1}, "all purpose flour":{"qty":1}, "all wheat flour": {"qty":1}, "baking flour":{"qty":1}}),
     "targets":resolveEntities({"almond flour":{"qty":1}, "gluten free flour":{"qty":1}})
-  }
- ]
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replace milk in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"milk":{"qty":1}}),
+    "targets":resolveEntities({"coconut milk":{"qty":1}, "greek yogurt":{"qty":1}, "soy milk":{"qty":1}, "almond milk":{"qty":1}, "non fat milk" : {"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replace sugar in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"sugar":{"qty":1}}),
+    "targets":resolveEntities({"brown sugar":{"qty":1}, "honey":{"qty":1}, "stevia":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replace blueberries in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"blueberry":{"qty":1}}),
+    "targets":resolveEntities({"blackberry":{"qty":1}, "strawberry":{"qty":1}})
+  },  
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.0,
+    "name" : "Non-replacements of lemon juice in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"lemon juice":{"qty":1}}),
+    "targets":resolveEntities({"white wine":{"qty":1}, "red wine vinegar":{"qty":1}, "other vinegar":{"qty":1}, "fruit vinegar":{"qty":1}, "cider vinegar":{"qty":1}})
+  },  
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of lemon juice in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"lemon juice":{"qty":1}}),
+    "targets":resolveEntities({"lime juice":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of vanilla yogurt in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"vanilla yogurt":{"qty":1}}),
+    "targets":resolveEntities({"greek yogurt":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of soy milk in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"soy milk":{"qty":1}}),
+    "targets":resolveEntities({"coconut milk":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of banana in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"banana":{"qty":1}}),
+    "targets":resolveEntities({"canned pumpkin":{"qty":1}, "coconut milk":{"qty":1}, "sweet potato":{"qty":1, "moreinfo":SWEET_POTATO_IN_SMOOTHIE_MORE_INFO}, "mango":{"qty":1}, "avocado":{"qty":1}, "frozen spinach":{"qty":1}, "yogurt":{"qty":1, "moreinfo":YOGURT_FOR_BANANA_IN_SMOOTHIE_MORE_INFO}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of honey in smoothie",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"honey":{"qty":1}}),
+    "targets":resolveEntities({"stevia":{"qty":1}}), 
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of honey in smoothie",
+    "infolink":"",
+    "moreinfo":"Increase protein",
+    "type":"RecipeAddition",
+    "targets":resolveEntities({"kale":{}, "pumpkin seed":{}, "oat":{}, "quinoa":{}, "spinach":{}, "almond butter":{}, "chia seed":{}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_smothie') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of orange juice",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"orange juice":{"qty":1}}),
+    "targets":resolveEntities({"carrot juice":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_patties') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of chickpea in patty",
+    "infolink":"http://allrecipes.com/recipe/13997/garbanzo-bean-patties/",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"chick-pea":{"qty":1}}),
+    "targets":resolveEntities({"quinoa":{"qty":1}, "red lentils":{"qty":1}, "green lentils":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_patties') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of chickpea in patty",
+    "infolink":"http://allrecipes.com/recipe/128968/italian-vegetarian-patties/",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"red lentils":{"qty":1}}),
+    "targets":resolveEntities({"green lentils":{"qty":1}, "brown lentils":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_dip') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of cottage cheese in dip",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"cottage cheese":{"qty":1}}),
+    "targets":resolveEntities({"yogurt":{"qty":1}, "egg white":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_mashed') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of turnips in mashed turnips",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"turnip":{"qty":1}}),
+    "targets":resolveEntities({"cauliflower":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_mashed') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of milk in mashed turnip/potato/cauliflower",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"milk":{"qty":1}}),
+    "targets":resolveEntities({"rice milk":{"qty":1}, "soy milk":{"qty":1}, "almond milk":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_mashed') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of milk in mashed turnip/potato/cauliflower",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"butter":{"qty":1}}),
+    "targets":resolveEntities({"rice milk":{"qty":1}, "soy milk":{"qty":1}, "almond milk":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_mashed') > 0.8 and recipe_has_ingredient('potato')",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of milk in mashed potato",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"milk":{"qty":1}}),
+    "targets":resolveEntities({"half and half":{"qty":1}, "half-and-half":{"qty":1}, "half & half":{"qty":1}, "light cream":{"qty":1}, "heavy cream":{"qty":1}, "sour cream":{"qty":0.5}, "creme fraiche":{"qty":1, "moreinfo":MILK_FOR_CREME_FRAICHE_MASHED_POTATO_MOREINFO}, "water":{"qty":1, "moreinfo":MILK_FOR_WATER_MASHED_POTATO_MOREINFO}, "chicken broth":{"qty":1}, "vegetable stock":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_lasagna') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of mozzarella in Lasagna",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"mozzarella cheese":{"qty":1}}),
+    "targets":resolveEntities({"ricotta cheese":{"qty":1}, "provolone cheese":{"qty":1}, "fontina cheese":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_patties') > 0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of mozzarella in patty",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"mozzarella cheese":{"qty":1}}),
+    "targets":resolveEntities({"cheddar cheese":{"qty":1, "infolink":"http://www.food.com/recipe/fried-potato-patties-375608"}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_burger') > 0.8 and (recipe_has_ingredient('ground lamb') or recipe_has_ingredient('lamb'))",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of mozzarella in lamb burger",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"mozzarella cheese":{"qty":1}}),
+    "targets":resolveEntities({"buffalo mozzarella cheese":{"qty":1}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_meatloaf')>0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of egg in meatloaf",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"egg":{"qty":1}}),
+    "targets":resolveEntities({"cheddar cheese":{"qty":1, "moreinfo":"Shredded"}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_pudding')>0.8 or recipe_tag_prob('is_custard')>0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of egg in pudding/custard",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"egg":{"qty":1}}),
+    "targets":resolveEntities({"arrowroot":{"qty":1, "moreinfo":EGG_FOR_ARROWROOT_PUDDING_CUSTARD_MOREINFO}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_patty')>0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of egg in patty",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"egg":{"qty":1}}),
+    "targets":resolveEntities({"potato flour":{"qty":1, "moreinfo":EGG_FOR_POTATO_FLOUR_PATTY_MOREINFO}})
+  },
+  {
+    "cond" : "recipe_tag_prob('is_quiche')>0.8",
+    "origin" : "MFE",
+    "version" : "1",
+    "probability" : 0.8,
+    "name" : "Replacement of spinache in quiche",
+    "infolink":"",
+    "moreinfo":"",
+    "type":"ListSinglePick",
+    "sources":resolveEntities({"spinache":{"qty":1}}),
+    "targets":resolveEntities({"kale":{"qty":1}, "bok choy":{"qty":1}, "collards":{"qty":1}, "arugula":{"qty":1}, "swiss chard":{"qty":1}})
+  }]
 
 
 print rules
@@ -399,9 +703,10 @@ for rule in rules:
   rdb.InsertManualSubRule(rule)
 
   # Also deduce RDF info about the source/target ingredients in the rule
-  for s in rule['sources']:
-    for t in rule['targets']:
-      rdfs.append(RDF.RDF(origin=MANUAL_RDF_ORIGIN, x=t['name'], relation = RDF.POSSIBLY_SUBSTITUTE_OF, y = s['name']))
+  if rule['type'] == 'ListSinglePick':
+    for s in rule['sources']:
+      for t in rule['targets']:
+        rdfs.append(RDF.RDF(origin=MANUAL_RDF_ORIGIN, x=t['name'], relation = RDF.POSSIBLY_SUBSTITUTE_OF, y = s['name']))
 
 rdb.removeRDFsFromOrigin(MANUAL_RDF_ORIGIN)  
 rdb.writeRDFs(rdfs)

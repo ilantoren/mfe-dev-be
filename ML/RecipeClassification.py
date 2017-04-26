@@ -86,12 +86,7 @@ class RecipeTagger_V1:
     return False
 
 
-  def is_hashbrown(self):
-    return False
-  
-  def is_mashed_potatoes(self):
-    return False
-
+    
   def is_gratin(self):
     return False
 
@@ -267,6 +262,63 @@ class RecipeTagger_V1:
       return True
     return False
 
+  def is_smoothie(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('smoothie', t) is not None:
+      return True
+   return False
+
+  def is_dip(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('(^|\s)dips?(\W|$)', t) is not None:
+      return True
+    return False
+
+  def is_mashed(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('mashed', t) is not None:
+      return True
+    return False
+
+  def is_lasagna(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('lasagna', t) is not None:
+      return True
+    return False
+
+  def is_burger(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('burger', t) is not None:
+      return True
+    return False
+
+  def is_meatloaf(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('meatloaf', t) is not None:
+      return True
+    return False
+
+
+  def is_pudding(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('pudding', t) is not None:
+      return True
+    return False
+
+  def is_custard(self):
+    if not 'title' in self.r: return False
+    t = r['title'].lower()
+    if re.search('custard', t) is not None:
+      return True
+    return False
+
 
   def getAllTags(self):
     res = []
@@ -279,8 +331,6 @@ class RecipeTagger_V1:
       ('is_couscous', self.is_couscous),
       ('is_burgul', self.is_burgul),
       ('is_potato', self.is_potato),
-      ('is_hashbrown', self.is_hashbrown),
-      ('is_mashed_potatoes', self.is_mashed_potatoes),
       ('is_gratin', self.is_gratin),
       ('is_mashed_potatoes', self.is_mashed_potatoes),
       ('is_gratin', self.is_gratin),
@@ -307,7 +357,15 @@ class RecipeTagger_V1:
       ('is_patties', self.is_patties),
       ('is_casserole', self.is_casserole),
       ('is_pancake', self.is_pancake),
-      ('is_cutlet', self.is_cutlet)]
+      ('is_cutlet', self.is_cutlet),
+      ('is_smoothie', self.is_smoothie),
+      ('is_dip', self.is_dip),
+      ('is_mashed', self.is_mashed),
+      ('is_lasagna', self.is_lasagna), 
+      ('is_burger', self.is_burger),
+      ('is_meatloaf', self.is_meatloaf),
+      ('is_pudding', self.is_pudding),
+      ('is_custard', self.is_custard)]
 
     for t in tags:
       if self.debug: print 'Tag=%s'% t[0]
