@@ -1,5 +1,5 @@
 agGrid.initialiseAgGridWithAngular1(angular);
-var rulesApp = angular.module( "rulesApp", [ 'agGrid', 'ui.router'] );
+var rulesApp = angular.module( "rulesApp", [ 'agGrid', 'ui.router', 'ui.grid', 'angularjs-dropdown-multiselect'] );
 
 rulesApp.config(function($stateProvider){
     $stateProvider
@@ -19,9 +19,6 @@ rulesApp.config(function($stateProvider){
                     url: '/all-rules',
                     params: {
                         id: null,id2:null
-                    },
-                    controller: function($scope, $stateParams, $state, $rootScope) {
-                        $scope.id = $rootScope.contractId;
                     },
                     templateUrl: 'all-rules.html'
                 }

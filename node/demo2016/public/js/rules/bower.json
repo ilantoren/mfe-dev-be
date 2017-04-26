@@ -11,6 +11,7 @@
   ],
   "devDependencies": {},
   "dependencies": {
-    "ag-grid": "^9.0.0"
+    "ag-grid": "^9.0.0",
+    "angularjs-dropdown-multiselect": "^1.11.8"
   }
 }

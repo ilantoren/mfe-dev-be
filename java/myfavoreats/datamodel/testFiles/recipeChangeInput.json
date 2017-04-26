@@ -1,0 +1,58 @@
+{
+        "probability": 0.142713,
+        "substitutionRule": "wheat berries for white rice",
+        "lowerFat": false,
+        "lowerCarb": false,
+        "lowerSodium": false,
+        "higherFiber": false,
+        "reducedCalories": false,
+        "higherProtein": false,
+        "addedIngredients": [
+            "wheatberries"
+        ],
+        "reducedIngredients": [
+            "rice"
+        ],
+        "carbohydrate": {
+            "name": "calories",
+            "change": -18.562,
+            "percentChange": 0.93,
+            "changeType": "NOCHANGE"
+        },
+        "totalFat": {
+            "name": "totalFat",
+            "change": 0.894,
+            "percentChange": 1.206,
+            "changeType": "INCREASE"
+        },
+        "protein": {
+            "name": "protein",
+            "change": 5.077,
+            "percentChange": 1.858,
+            "changeType": "INCREASE"
+        },
+        "satFat": {
+            "name": "satFat",
+            "change": 0.131,
+            "percentChange": 1.096,
+            "changeType": "NOCHANGE"
+        },
+        "sodium": {
+            "name": "sodium",
+            "change": 4.566,
+            "percentChange": 1.029,
+            "changeType": "NOCHANGE"
+        },
+        "sugars": {
+            "name": "sugars",
+            "change": 0.251,
+            "percentChange": 1.364,
+            "changeType": "INCREASE"
+        },
+        "fiber": {
+            "name": "fiber",
+            "change": 6.986,
+            "percentChange": 12.831,
+            "changeType": "INCREASE"
+        }
+    }
