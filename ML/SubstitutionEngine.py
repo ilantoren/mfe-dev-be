@@ -246,13 +246,13 @@ class ManualRule_for_ListSinglePick(ManualRule):
   def check_cond(self, cond, r, ing_name):
     ings = r.getIngs() 
     ing_names = map(lambda x: x['cannonical'], ings)
-
     
     def recipe_has_ingredient(ing_):
       return (self.rdb.cannonicalize_entity(ing_) in ing_names)
       
     ingredient_absolute_quantity_grams = 0.0
     prob_served_raw = r.getTagProb('is_salad') # a patch for now feb 28 2017
+    if prob_served_raw is None: prob_served_raw = 0.0
     prob_served_cooked = 1 - prob_served_raw
     prob_part_of_sauce = 0.8 if rdb.cannonicalize_entity(ing_name) == rdb.cannonicalize_entity('tahini') else 0.0 # a patch for now feb 28 2017
     prob_for_greasing_pans = 0.0 # a patch for now feb 28 2017

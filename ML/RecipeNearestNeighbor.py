@@ -15,6 +15,7 @@ import Queue as Q
 import RDF
 from SubstitutionEngine import AutomaticRule, ListSinglePick, SimpleSubstitution
 from sets import Set
+from faiss import faiss
 
 EPS = 0.00001
 
@@ -47,8 +48,6 @@ def none2str(x):
 def match_recipes_munkres(r1, r2, graph):
   ings1 = r1.getIngs()
   ings2 = r2.getIngs()
-  #print 'ings1=', map(lambda x:x['cannonical'], ings1)
-  #print 'ings2=', map(lambda x:x['cannonical'], ings2)
   n = max(len(ings1), len(ings2))
   cost = []
   for i in range(n):
@@ -112,7 +111,6 @@ def match_recipes(r1, r2, graph, use_gram = False, gram_ratio_thresh = 10):
         match_info.append(none2str(ing["food"]) + '->' + none2str(ing2['food']))
         break
 
-#  print 'munkres: ', match_recipes_munkres(r1, r2, graph)
   if use_gram:
     return total_match_gram/total_gram, match_info
   else:
@@ -129,19 +127,13 @@ def find_subs(rdb1, rdb2, graph, x, neighbor_ids, t=0.35, source_ing = '', match
     match_, match_info_ = match_recipes(neighbor_recipe, recipe, graph)
     if match < match_thresh or match_ < match_thresh: continue
     clean_neighbor_recipes.append(neighbor_recipe)
-    #print match, match_info
-    #print '  %s %s: %s' % (neighbor_recipe.getId(), neighbor_recipe.getTitle(), neighbor_recipe.getCannonicalIngNames())
   neighbor_recipes = clean_neighbor_recipes
 
   print 'num neighbors = %d' % len(neighbor_recipes)
-  #w2vd = Word2VecDistance(rdb=rdb)
   for ing in ings:
     if ing is None: continue
     if source_ing != '' and ing['cannonical'] != source_ing: continue
-    #if myfloat(ing['gram'] == 0.0): continue
     gram = myfloat(ing['gram'])
-    #print none2str(ing['cannonical']) + '--->'
-    #if not w2vd.hasVector(ing): continue
     ing_counter = {}
     for neighbor_recipe in neighbor_recipes:
       ings_ = neighbor_recipe.getIngs() #, ings_original_ = rdb.getCannonicalIngredientList(neighbor_recipe)
@@ -149,20 +141,32 @@ def find_subs(rdb1, rdb2, graph, x, neighbor_ids, t=0.35, source_ing = '', match
         if not ing_['cannonical'] in graph.nodes: continue
         node_ = graph.nodes[ing_['cannonical']]
         gram_ = myfloat(ing_['gram'])
-        #if gram_ == 0.0: continue
-        #if gram_ < gram/5 or gram < gram_/5: continue
         sources = map(lambda x: x.name, node_.getNeighbors(RDF.POSSIBLY_SUBSTITUTE_OF))
         if not ing['cannonical'] in sources: continue
         increment(ing_counter, ing_['cannonical'])
-    
-    #for ing_ in ing_counter:
-    #  print '  ', ing_, ing_counter[ing_]
 
 
 class NearNeighborSubstitutionRule(AutomaticRule):
   def __init__(self, rdb, sim_vecname = 'word2vec', sim_threshold = 0.6, match_threshold = 0.6, source_ing = '', debug=False, bigram_table_name = None, limit_sim=100, gram_ratio_threshold=10):
     self.rdb = rdb
     self.recipe_vecs = rdb.getRecipeVecs(sim_vecname)
+
+    # Initialize a faiss db
+    faiss_db = []
+    self.id2ind = {}
+    self.ind2id = []
+    c = 0
+    for k in self.recipe_vecs:
+      faiss_db.append(np.array(self.recipe_vecs[k], dtype=np.float32) / np.linalg.norm(np.array(self.recipe_vecs[k])))
+      self.id2ind[k] = c
+      self.ind2id.append(k)
+      c = c + 1
+    dim = len(faiss_db[0])
+    self.faiss_index = faiss.IndexFlatIP(dim)
+    self.faiss_index.add(np.array(faiss_db, dtype=np.float32))
+    print ("Faiss total vectors: %d" % self.faiss_index.ntotal)
+
+
     self.sim_threshold = sim_threshold
     self.match_threshold = match_threshold
     self.source_ing = source_ing # This is just used for debugging, in case you want to debug substitution of a single ingredient
@@ -180,20 +184,15 @@ class NearNeighborSubstitutionRule(AutomaticRule):
   def apply(self, recipe):
     _id = recipe.getId()
     res = []
-    if not _id in self.recipe_vecs: return []
-    xvec = np.array(self.recipe_vecs[_id])
-    near_ids = []
-    for other_recipe in self.recipe_vecs:
-      if other_recipe == _id: continue
-      yvec = np.array(self.recipe_vecs[other_recipe])
-      sim = np.dot(xvec, yvec)  / math.sqrt(np.dot(xvec, xvec) * np.dot(yvec, yvec))
-      if sim >= self.sim_threshold:
-        near_ids.append(other_recipe)
-        if self.limit_sim and len(near_ids) == self.limit_sim: break
-
+    if not _id in self.recipe_vecs: return res
+    xvec = np.array([self.recipe_vecs[_id]], dtype=np.float32)
+    
+    D,I = self.faiss_index.search(xvec, self.limit_sim)
+    near_ids = map(lambda x: self.ind2id[x], I[0])
     if self.debug:
-      print 'Number of near recipes: %d' % len(near_ids)
-
+      print 'Number of near recipes returned from Faiss: %d' % len(D)
+      print D,near_ids
+   
     # Another match based filter
     near_recipes = list(self.rdb.findRecipes(query={'_id' : {'$in' : map(lambda x: ObjectId(x), near_ids)}}))
     near_recipes2 = []
@@ -216,7 +215,7 @@ class NearNeighborSubstitutionRule(AutomaticRule):
       if self.source_ing != '' and cann != self.source_ing: continue
       gram = myfloat(ing['gram'])
       if cann is None: 
-        print 'Warning, no cannonical for ' + clean_str(ing['food'])s
+        print 'Warning, no cannonical for ' + clean_str(ing['food'])
         continue
 
       ing_counter = {}
@@ -249,6 +248,7 @@ class NearNeighborSubstitutionRule(AutomaticRule):
             quantityRatio = 1.0,
             probability = 0.8,
             moreinfo = ''))
+          print cann + ' -> ' + cann_
       if not len(lsp.options): continue
       res.append(lsp.getDict())
     if self.debug: print 'Result of nearest neighbor substitution:', res
@@ -281,9 +281,24 @@ if __name__ == "__main__":
   graph = rdb2.getRDFGraph(['foodsubs', 'manual rules', 'entityMapping'])
   q = Q.PriorityQueue(maxsize=eval(options.k))
   
-  recipe_vecs1 = rdb1.GetRecipeVecs(options.vecname)
-  recipe_vecs2 = rdb2.GetRecipeVecs(options.vecname)
+  recipe_vecs1 = rdb1.getRecipeVecs(options.vecname)
+  recipe_vecs2 = rdb2.getRecipeVecs(options.vecname)
 
+  # Initialize a faiss db
+  faiss_db = []
+  id2ind = {}
+  ind2id = []
+  c = 0
+  for k in recipe_vecs2:
+    faiss_db.append(np.array(recipe_vecs2[k], dtype=np.float32) / np.linalg.norm(np.array(recipe_vecs2[k])))
+    id2ind[k] = c
+    ind2id.append(k)
+    c = c + 1
+  dim = len(faiss_db[0])
+  faiss_index = faiss.IndexFlatIP(dim)
+  print ("Faiss trained flag: %d" % faiss_index.is_trained)
+  faiss_index.add(np.array(faiss_db, dtype=np.float32))
+  print ("Faiss total vectors: %d" % faiss_index.ntotal)
 
   if options.x != 'random' :
     if not options.x in recipe_vecs1:
@@ -292,7 +307,7 @@ if __name__ == "__main__":
   else:
     options.x = random.choice(recipe_vecs1.keys())
 
-  xvec = np.array(recipe_vecs1[options.x])
+  xvec = np.array(recipe_vecs1[options.x], dtype=np.float32)
 
   closest = None
   closest_sim = 0.0
@@ -321,8 +336,12 @@ if __name__ == "__main__":
     ings, original_ings = rdb2.getCannonicalIngredientList(r)
     res.append((sim, id_, t, ings.__str__()))
   neighbor_ids = map(lambda x: x[1], res)
+  print ("neighbors ids:\n%s" % neighbor_ids.__str__())
   print 'Worst similarity = ', res[0][0]
 
+  # Now use Faiss, for comparison
+  faiss_result = map(lambda x: ind2id[x], faiss_index.search(np.array([xvec], dtype=np.float32), eval(options.k))[1][0])
+  print ("faiss_result = \n%s" % faiss_result.__str__())
   find_subs(rdb1, rdb2, graph, options.x, neighbor_ids, t=eval(options.t), source_ing = options.ing, match_thresh = eval(options.match_thresh))
 
 
