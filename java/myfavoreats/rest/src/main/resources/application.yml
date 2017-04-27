@@ -26,14 +26,11 @@ spring:
 #server.compression.mime-types=application/json,application/xml,text/html,text/xml,text/plain
     
   data:
-    mongodb: 
-      host: localhost:27017
-      database: myfavoreats-develop
-      
-#     host: ds145728-a0.mlab.com:45728
-#     password: javadevelop
-#     username: java
-#     database: myfavoreats-develop    
+    mongodb:       
+     host: ds145728-a0.mlab.com:45728
+     password: javadevelop
+     username: java
+     database: myfavoreats-develop    
     
 #      host: ds151719-a0.mlab.com:51719
 #     database: mfe-front-end
