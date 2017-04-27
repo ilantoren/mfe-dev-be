@@ -64,7 +64,7 @@ public interface RecipeRepository extends MongoRepository<RecipePOJO, String> {
 	@Query( value = "{}")
 	public Stream<RecipePOJO> streamAllRecipes();
 	
-	@Query( value = "{ _id: {$in: ?0 }}", fields= "{ title:1, site:1, urn:1, photos:1, website:1}")
+	@Query( value = "{ _id: {$in: ?0 }}", fields= "{ title:1, site:1, urn:1, photos:1, website:1, categories:1}")
 	List<RecipePOJO>  findRecipesById( List<String> idList, Sort sort );
 	
 }

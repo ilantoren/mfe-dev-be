@@ -49,7 +49,7 @@ client.registerMethod( "changedTitle",        "http://"+ resthost + restport + "
 client.registerMethod( "childAndParent",      "http://"+ resthost + restport + "/recipes/changed/pair/${id}", "GET");
 client.registerMethod( "recipeByParent",      "http://"+ resthost + restport + "/recipes/parent/${id}", "GET");
 client.registerMethod( "recipeBySubstitute",  "http://"+ resthost + restport + "/recipes/substitute/${description}", "GET");
-client.registerMethod( "recipeBySearchPhrase","http://"+ resthost + restport + "/recipes/title/search/${phrase}", "GET");
+client.registerMethod( "recipeBySearchPhrase","http://"+ resthost + restport + "/recipes/search/${phrase}", "GET");
 client.registerMethod( "recipeAutoComplete","http://"+ resthost + restport + "/recipes/title/autocomplete/${phrase}", "GET");
 client.registerMethod( "mongoImage"          ,"http://"+ resthost + restport + "/recipe/image/${id}", "GET");
 client.registerMethod( "recipeWithSubstitute", "http://"+ resthost + restport + "/recipes/with-substitute/${id}", "GET");

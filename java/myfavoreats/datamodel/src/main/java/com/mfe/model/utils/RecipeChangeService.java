@@ -7,6 +7,7 @@ package com.mfe.model.utils;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -367,35 +368,46 @@ public class RecipeChangeService {
      
      public void calculateRecipeNutrition(RecipePOJO pojo, IngredientPOJOService ingredientPojo) throws BadParameterException {
     	 if ( pojo == null ) throw new BadParameterException( "pojo can not be null");
+    	 Date start = new Date();
+    	 log.info( "RecipeChangeService:   calculateRecipeNutrition  recipe id " + pojo.getId() );
     	 final String recipeId = pojo.getId();
-         Date start = new Date();
+        
     	 NutrientProfile nutrients = new NutrientProfile();
-         log.info( "calculating for recipePOJO " + recipeId + ": Start timer");
-
+    	 List<Line> nutritionAdder = new ArrayList<>();
          List<Line> ingredients = (List<Line>) RecipePOJO.getIngredientLines(pojo);
          for (Line ingredient : ingredients) {
              String ndb = ingredient.getNdb();
              if (ndb == null || ingredient.getGram() == null) {
+            	 log.warn( String.format( "NOT MAPPED TO INGREDIENT: recipe id: %s  food: %s  %s",  pojo.getId(), ingredient.getFood(), ingredient.getOriginal()  ));
                  continue;
              }
              Double mult = BigDecimal.valueOf(ingredient.getGram()).divide(BigDecimal.valueOf(100d), 6, BigDecimal.ROUND_UP).doubleValue();
              IngredientPOJO ingred = ingredientPojo.getByEntityMapping(ingredient.getEntityId() );
              if (ingred == null) {
-            	 log.warn("food: " + ingredient.getFood() + ":" + ingredient.getCannonical()  + " of " + recipeId + " : " + ingredient.getUid() + " no entity mapping");
+            	 log.warn("food: " + ingredient.getFood() + "/" + ingredient.getCannonical()  + " of " + recipeId + " : " + ingredient.getUid() + " no entity mapping");
                  continue;
              }
              nutrients.add(ingred, mult);
              NutrientProfile perIngredient = new NutrientProfile();
              perIngredient.add(ingred, mult);
-             ingredient.setCalories(perIngredient.getCalories());
-             ingredient.setCarbohydrates(perIngredient.getCarbohydrate());
-             ingredient.setCholesterol(perIngredient.getCholesterol());
-             ingredient.setProtein(perIngredient.getProtein());
-             ingredient.setTotalFat(perIngredient.getTotalFat());
-             ingredient.setSodium(perIngredient.getSodium());
-             ingredient.setSatFat(perIngredient.getSatFat());
+             Line line;
+			try {
+				ingredient.setCalories(perIngredient.getCalories());
+				ingredient.setCarbohydrates(perIngredient.getCarbohydrate());
+				ingredient.setCholesterol(perIngredient.getCholesterol());
+				ingredient.setProtein(perIngredient.getProtein());
+				ingredient.setTotalFat(perIngredient.getTotalFat());
+				ingredient.setSodium(perIngredient.getSodium());
+				ingredient.setSatFat(perIngredient.getSatFat());
+				line = ingredient.clone();
+	            nutritionAdder.add( line );
+			} catch (CloneNotSupportedException e) {
+				
+				throw new BadParameterException(e.getLocalizedMessage());
+			}
+             
          }
-         Double sumGram = ingredients.stream().mapToDouble(i -> i.getGram()).sum();
+         Double sumGram = nutritionAdder.stream().mapToDouble(i -> i.getGram()).sum();
          pojo.setTotalGrams(BigDecimal.valueOf(sumGram));
          nutrients.setTotalGrams(sumGram);
          if (sumGram > 0) {

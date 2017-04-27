@@ -225,6 +225,11 @@ public class IngredientPOJO {
     @JacksonXmlProperty
     String source;
     
+    String potassium;
+    String phosphorous;
+    String contains;   // new Apr 2017 for ingredient list of branded
+    String ru;        // either g or ml which is a sign of liquid v solid
+    
     
     
     public String getId() {
@@ -587,6 +592,38 @@ public class IngredientPOJO {
 
 	public void setCanonical(String canonical) {
 		this.canonical = canonical;
+	}
+
+	public String getContains() {
+		return contains;
+	}
+
+	public void setContains(String contains) {
+		this.contains = contains;
+	}
+
+	public String getRu() {
+		return ru;
+	}
+
+	public void setRu(String ru) {
+		this.ru = ru;
+	}
+
+	public String getPhosphorous() {
+		return phosphorous;
+	}
+
+	public void setPhosphorous(String phosphorous) {
+		this.phosphorous = phosphorous;
+	}
+
+	public String getPotassium() {
+		return potassium;
+	}
+
+	public void setPotassium(String potassium) {
+		this.potassium = potassium;
 	}
     
     

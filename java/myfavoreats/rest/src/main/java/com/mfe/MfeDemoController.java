@@ -118,6 +118,9 @@ public class MfeDemoController {
 	RecipeChangeService recipeChangeService;
 
 	Log log = LogFactory.getLog(MfeDemoController.class);
+	
+	Predicate<RecipePOJO> isValidRecipe = (a) -> a.getTitle() != null && a.getPhotos() != null && a.getUrn() != null ;
+
 
 	public static Integer TITLE_LIMIT = 300;
 
@@ -221,9 +224,9 @@ public class MfeDemoController {
 		Query query = TextQuery.queryText(criteria).sortByScore().with(new PageRequest(0, TITLE_LIMIT*2));
 
 		List<RecipePOJO> pojos = mongoOperations.find(query, RecipePOJO.class);
+		log.info( "Search for '" + word + "'  returns " + pojos.size() + " recipes");
 		//Set<String> ids = new HashSet<>();
 		//Set<String> uniqueNames = new HashSet<>();
-		Predicate<RecipePOJO> isValidRecipe = (a) -> a.getTitle() != null && a.getPhotos() != null && a.getUrn() != null ;
 		List<RecipeTitle> result = null;
 	
 		result = pojos.stream()
@@ -278,6 +281,7 @@ public class MfeDemoController {
 		pojos.sort(new RecipeComparator());
 		//Set<String> uniqueTitle = new HashSet<>();
 		List<RecipeTitle> result = pojos.stream()
+				.filter( isValidRecipe )
 				.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos()))
 				.collect(Collectors.toList());
 		Date end = new Date();
@@ -289,10 +293,11 @@ public class MfeDemoController {
 
 	private List<RecipePOJO> findRecipesUsingSubstitute(String sourceId, String targetId) {
 
-		log.debug("findRecipesWithSubstitute  " + sourceId + "  " + targetId);
+		log.info("findRecipesWithSubstitute  " + sourceId + "  " + targetId);
 		List<String> recipeIdList = substitutionsRepository.findBySourceAndTarget(sourceId, targetId)
 				.limit(TITLE_LIMIT)
 				.map(x -> x.getRecipeId()).collect(Collectors.toList());
+		log.info( "findRecipesWithSubstitute  " + sourceId + "  " + targetId + "found id list " + recipeIdList.size() + " entries");
 
 		//String ids = recipeIdList.stream().map(d -> d.toString()).collect(Collectors.joining(", "));
 		//log.info("IDS: " + ids);
@@ -691,7 +696,7 @@ public class MfeDemoController {
 		return new DropDownTitle(sourceId, targetId, description);
 	}
 
-	/*
+	
 	@RequestMapping(method = RequestMethod.GET, value = "/admin/prepare")
 	public String calculateAllRecipes() {
 		ArrayList<RecipePOJO> buffer = new ArrayList<>();
@@ -726,15 +731,17 @@ public class MfeDemoController {
 	@RequestMapping(method = RequestMethod.GET, value = "/recipe/nutrition/{id}")
 	@ResponseBody
 	public RecipePOJO calculateNutrition(@PathVariable("id") String id) {
+		log.info( "calculate recipe nutrition for recipe id " + id );
 		RecipePOJO pojo = recipes.findRecipeById(id);
 		try {
 			recipeChangeService.calculateRecipeNutrition(pojo);
 		} catch (BadParameterException e) {
 			log.error("recipe " + pojo.getId(), e);
 		}
+		log.info( "DONE calculate recipe nutrition for recipe id " + id );
 		return pojo;
 	}
-*/
+
 	@RequestMapping(method = RequestMethod.GET, value = "/substitutions/recipe/{recipeId}")
 	@ResponseBody
 	public Substitutions findSubstitutionsByRecipeid(@PathVariable("recipeId") String recipeId) {

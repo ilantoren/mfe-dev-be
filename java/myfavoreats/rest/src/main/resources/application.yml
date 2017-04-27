@@ -1,5 +1,13 @@
 logging:
   path: logs
+  
+server:
+  compression:
+    enabled: true
+    min-response-size: 2048
+    mime-types: [application/json, application/xml]
+
+
 
 security:
   basic:
@@ -10,15 +18,22 @@ security:
     
 spring:
   application:
-    name:  mfe-rest-demo 
+    name:  mfe-dev-be
+    
+    
+
+#    server.compression.enabled=true
+#server.compression.mime-types=application/json,application/xml,text/html,text/xml,text/plain
+    
   data:
     mongodb: 
-   
+      host: localhost:27017
+      database: myfavoreats-develop
       
-     host: ds145728-a0.mlab.com:45728
-     password: javadevelop
-     username: java
-     database: myfavoreats-develop    
+#     host: ds145728-a0.mlab.com:45728
+#     password: javadevelop
+#     username: java
+#     database: myfavoreats-develop    
     
 #      host: ds151719-a0.mlab.com:51719
 #     database: mfe-front-end

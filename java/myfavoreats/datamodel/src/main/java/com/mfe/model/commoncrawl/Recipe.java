@@ -25,7 +25,9 @@ import org.springframework.data.annotation.Id;
 @JacksonXmlRootElement(localName = "recipe")
 public class Recipe implements Serializable {
 
-    private String urn;
+
+
+	private String urn;
 
     public Recipe() {
         this.ingredient = new ArrayList();
