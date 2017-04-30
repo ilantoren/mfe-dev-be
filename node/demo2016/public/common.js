@@ -76,11 +76,20 @@ function searchByPhrase( phrase ) {
   	  	  
 }
  
+ /*  open the gui that will replace this demo */
+ function openGUI( obj ) {
+     var url = obj.href
+     window.open( url );
+ }
+ 
+ 
 function updateRecipePair( link, child ) {
      var id = link.name;  // name holds the id field
      var parentId = link.id;
      var divId = "#div-" + parentId;
      $("#objectid").html(id);
+     var href = "http://54.84.218.231:3000/#/recipe/" + id;
+     $("#objectIdAnchor").attr('href', href);
      
      var title = link.text;
      link.style = "opacity:0.8";
