@@ -80,6 +80,7 @@ function updateRecipePair( link, child ) {
      var id = link.name;  // name holds the id field
      var parentId = link.id;
      var divId = "#div-" + parentId;
+     $("#objectid").html(id);
      
      var title = link.text;
      link.style = "opacity:0.8";

@@ -145,3 +145,7 @@ h2 {
 .decreased {
    color: red;
 }
+
+.recipe_objectid {
+    float:right;
+}
