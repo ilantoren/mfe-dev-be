@@ -1,7 +1,7 @@
 var reducefunction = function( key, values) {
-	print( key );
-	var x = values.pop();
-	printjson(x);
-	return x;
+	if ( values.length > 20) {
+		var x = values.pop();
+		return x;
+	}
 }
 	
