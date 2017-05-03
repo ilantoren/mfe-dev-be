@@ -4,8 +4,9 @@ logging:
 server:
   compression:
     enabled: true
-    min-response-size: 2048
-    mime-types: [application/json, application/xml]
+    min-response-size: 512
+    mime-types: [application/json, application/xml, text/text]
+
 
 
 

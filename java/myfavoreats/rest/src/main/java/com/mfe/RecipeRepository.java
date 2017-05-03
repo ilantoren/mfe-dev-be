@@ -3,6 +3,7 @@ package com.mfe;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -65,6 +66,7 @@ public interface RecipeRepository extends MongoRepository<RecipePOJO, String> {
 	public Stream<RecipePOJO> streamAllRecipes();
 	
 	@Query( value = "{ _id: {$in: ?0 }}", fields= "{ title:1, site:1, urn:1, photos:1, website:1, categories:1}")
-	List<RecipePOJO>  findRecipesById( List<String> idList, Sort sort );
+	@Cacheable("sortedRecipeTitles")
+	List<RecipePOJO>  findRecipeTitlesSorted( List<String> idList, Sort sort );
 	
 }

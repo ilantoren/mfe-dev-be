@@ -3,9 +3,9 @@ applications:
   memory: 876M
   instances: 1
   domain: mybluemix.net
-  name: mfe-dev-fe
-  host: mfe-dev-fe
+  name: mfe-dev-fe2
+  host: mfe-dev-fe2
   disk_quota: 1024M
   services:
   - mfe-rest-service
-  - mongo-instance
+  - mongo-instance2

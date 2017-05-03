@@ -1,6 +1,6 @@
 applications:
-- name: mfe-dev-be
+- name: mfe-dev-be2
   memory: 1024M
   instances: 1
   domain: mybluemix.net
-  host: mfe-dev-be
+  host: mfe-dev-be2

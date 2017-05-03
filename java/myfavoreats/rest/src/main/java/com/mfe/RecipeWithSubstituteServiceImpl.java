@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.mfe.model.recipe.BadParameterException;
@@ -327,6 +328,7 @@ public class RecipeWithSubstituteServiceImpl implements RecipeWithSubstituteServ
 		return sub;
 	}
 
+	@Async
 	private void saveSubsCalculation(Set<RecipeSubsCalculation> a) {
 		if (a == null || recipeSubsCalculationRepository == null)
 			return;

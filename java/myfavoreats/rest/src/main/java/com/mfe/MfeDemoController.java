@@ -122,7 +122,7 @@ public class MfeDemoController {
 	Predicate<RecipePOJO> isValidRecipe = (a) -> a.getTitle() != null && a.getPhotos() != null && a.getUrn() != null ;
 
 
-	public static Integer TITLE_LIMIT = 300;
+	public static Integer TITLE_LIMIT = 150;
 
 	public MfeDemoController() {
 	}
@@ -258,15 +258,19 @@ public class MfeDemoController {
 
 	@RequestMapping(method = RequestMethod.GET, value = "/recipes/changed/title")
 	public List<RecipeTitle> getChangedTitles() {
+		log.info( "START /recipes/changed/title");
+		Date start = new Date();
 		Set<String> unique = new HashSet<>();
 		List<RecipeTitle> titleList = new ArrayList<>();
 		PageRequest pageable = new PageRequest(1, TITLE_LIMIT, Direction.DESC, "categories");
 		try (Stream<RecipePOJO> stream = recipes.findRecipeTitles(pageable) ){
-			List<RecipeTitle> titleListPart2 = stream.filter(x -> unique.add(x.getTitle())).limit(500)
+			List<RecipeTitle> titleListPart2 = stream.filter(x -> unique.add(x.getTitle())).limit(TITLE_LIMIT)
 					.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos()))
 					.collect(Collectors.toList());
 			titleList.addAll(titleListPart2);
 		}
+		double elapsed =  (new Date().getTime()  - start.getTime())/1000;
+		log.info( String.format( "END /recipes/changed/title   %03.2f secs", elapsed));
 		return titleList;
 	}
 
@@ -315,7 +319,7 @@ public class MfeDemoController {
 		// List<RecipePOJO> list = mongoOperations.find( query, RecipePOJO.class
 		// );
 
-		List<RecipePOJO> list = recipes.findRecipesById(recipeIdList, new Sort(Sort.Direction.DESC, "categories"));
+		List<RecipePOJO> list = recipes.findRecipeTitlesSorted(recipeIdList, new Sort(Sort.Direction.DESC, "categories"));
 		log.info("substitutions: " + recipeIdList.size() + "   recipes: " + list.size());
 
 		return list;
@@ -380,14 +384,15 @@ public class MfeDemoController {
 				recipePojo.setRecipeChange(rc);
 				XmlMapper map = new XmlMapper();
 				ObjectWriter ow = map.writer();
+				Date stopTime = new Date();
+				long elapsed = stopTime.getTime() - startTime.getTime();
+				log.info("End timer took " + Long.toString(elapsed)
+						+ "ms:   /recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id);
 				return serializeResult(ow, myrecipes);
 			}
 		}
 		log.warn("Empty result set returned for recipePojo " + id);
-		Date stopTime = new Date();
-		long elapsed = stopTime.getTime() - startTime.getTime();
-		log.info("End timer took " + Long.toString(elapsed)
-				+ "ms:   /recipes/with-substitute  (getRecipeWithSubstitute) called with id " + id);
+		
 		return null;
 	}
 

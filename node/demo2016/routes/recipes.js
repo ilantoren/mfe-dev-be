@@ -21,7 +21,7 @@ var client = new Client();
 var host = appEnv.url;
 
 
-var service = appEnv.getService("mfe-dev-be")
+var service = appEnv.getService("mfe-dev-be2")
 
 if ( service === null) {
         log.info( "mfe-dev-be was not found in bound services");
@@ -33,7 +33,7 @@ if ( service === null) {
     log.info( "Credentials: " + JSON.stringify( credentials ));
     
     try {
-	var resthost = 'mfe-dev-be.mybluemix.net';
+	var resthost = 'mfe-dev-be2.mybluemix.net';
 	var restport = "";
     }
     catch( err ) {
