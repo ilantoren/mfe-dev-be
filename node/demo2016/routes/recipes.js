@@ -158,10 +158,12 @@ router.get('/recipes/changed/title', function( req, res, next ) {
     res.header("Access-Control-Allow-Origin", host);
     res.header("Access-Control-Allow-Methods", "GET, POST");
     var myset = [];
+
 	client.methods.changedTitle( function ( data, response ) {
 		log.debug("changedTitle\n" +  response );
-		if (data )
-			res.send( data);
+
+ 
+	         res.send( data);
 	});
 });
 

@@ -26,7 +26,7 @@ spring:
 #server.compression.mime-types=application/json,application/xml,text/html,text/xml,text/plain
     
   data:
-    mongodb:       
+    mongodb:    
      host: ds145728-a0.mlab.com:45728
      password: javadevelop
      username: java

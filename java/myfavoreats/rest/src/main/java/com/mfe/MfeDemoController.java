@@ -21,7 +21,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,10 +37,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ScriptOperations;
-import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
-import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.BasicQuery;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.TextQuery;
@@ -263,7 +259,7 @@ public class MfeDemoController {
 		PageRequest pageable = new PageRequest(1, TITLE_LIMIT, Direction.DESC, "categories");
 		try (Stream<RecipePOJO> stream = recipes.findRecipeTitles(pageable) ){
 			List<RecipeTitle> titleListPart2 = stream.filter(x -> unique.add(x.getTitle())).limit(500)
-					.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos()))
+					.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos(), x.getCategories().length > 0 ? 1: 0 ))
 					.collect(Collectors.toList());
 			titleList.addAll(titleListPart2);
 		}
@@ -282,7 +278,7 @@ public class MfeDemoController {
 		//Set<String> uniqueTitle = new HashSet<>();
 		List<RecipeTitle> result = pojos.stream()
 				.filter( isValidRecipe )
-				.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos()))
+				.map(x -> new RecipeTitle(x.getId(), x.getTitle(), x.getUrn(), x.getWebsite(), x.getPhotos(), x.getCategories().length > 0 ? 1: 0 ))
 				.collect(Collectors.toList());
 		Date end = new Date();
 		long millis = end.getTime() - start.getTime();
@@ -328,7 +324,8 @@ public class MfeDemoController {
 		Set<String> recipeIdSet = recipes.findBySearchPhrase("*" + phrase, new PageRequest(0, 100)).map(a -> a.getId())
 				.collect(Collectors.toSet());
 		List<RecipeTitle> result = imageRepository.findAllTitles().filter(a -> recipeIdSet.contains(a.getRecipeId()))
-				.map(a -> new RecipeTitle(a.getRecipeId(), a.getTitle(), a.getUrl(), a.getSite(), a.getImageUrl()))
+				.map(a -> new RecipeTitle(a.getRecipeId(), a.getTitle(), a.getUrl(), a.getSite(), a.getImageUrl()
+						,a.getCategories().contains("demo") ? 1: 0))
 				.collect(Collectors.toList());
 		Date queryEnd = new Date();
 		long milis = queryEnd.getTime() - start.getTime();
@@ -343,7 +340,8 @@ public class MfeDemoController {
 		Date start = new Date();
 		Set<String> recipeIdSet = recipes.findTitleStartsWith(chars).map(a -> a.getId()).collect(Collectors.toSet());
 		List<RecipeTitle> result = imageRepository.findAllTitles().filter(a -> recipeIdSet.contains(a.getRecipeId()))
-				.map(a -> new RecipeTitle(a.getRecipeId(), a.getTitle(), a.getUrl(), a.getSite(), a.getImageUrl()))
+				.map(a -> new RecipeTitle(a.getRecipeId(), a.getTitle(), a.getUrl(), a.getSite(), a.getImageUrl(),
+						a.getCategories().contains("demo") ? 1 : 0))
 				.collect(Collectors.toList());
 		Date queryEnd = new Date();
 		long milis = queryEnd.getTime() - start.getTime();

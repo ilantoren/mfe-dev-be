@@ -15,6 +15,10 @@ import java.io.Serializable;
  *
  * @author richardthorne
  */
+/**
+ * @author richardthorne
+ *
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JacksonXmlRootElement(localName = "recipeTitle")
 public class RecipeTitle implements Serializable {
@@ -23,6 +27,7 @@ public class RecipeTitle implements Serializable {
     private String urn;
 	private String site;
 	private String imageUrl;
+	private Integer dm;
     
    
     
@@ -53,10 +58,11 @@ public class RecipeTitle implements Serializable {
     }
     
 
-    public RecipeTitle(String id, String title, String urn, String site, String imageUrl) {
+    public RecipeTitle(String id, String title, String urn, String site, String imageUrl, Integer dm ) {
         this.id = id;
         this.title = title;
         this.site = site;
+        this.dm = dm;
         
         if (urn != null )
         	this.urn = urn.replaceAll( "\\s", "");
@@ -81,6 +87,13 @@ public class RecipeTitle implements Serializable {
 
 		if (a.getPhotos() != null)
 			this.imageUrl = a.getPhotos().replaceAll("\\s", "");
+		
+		if ( a.getCategories().length > 0) {
+			this.dm = 1;
+		}
+		else { 
+			dm = 0;
+		}
 	}
 
 	public String getSite() {
@@ -97,6 +110,14 @@ public class RecipeTitle implements Serializable {
 
 	public void setImageUrl(String imageUrl) {
 		this.imageUrl = imageUrl;
+	}
+
+	public Integer getDm() {
+		return dm;
+	}
+
+	public void setDm(Integer dm) {
+		this.dm = dm;
 	}
     
     
