@@ -21,7 +21,7 @@
     "gulp-concat": "~2.4.2",
     "js2xmlparser": "^1.0.0",
     "minimatch": "3.0.2",
-    "mongodb": "^2.2.5",
+    "mongodb": "^3.1.13",
     "morgan": "^1.7.0",
     "nedb": "*",
     "node-rest-client": "^1.8.0",
